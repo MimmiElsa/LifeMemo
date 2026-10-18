@@ -1,8 +1,27 @@
+import { useState } from 'react'
+import { getNavigationItems } from './presenters/appPresenter.js'
+import { presentStartPage } from './presenters/startPagePresenter.js'
+import { AppShell } from './views/AppShell.jsx'
+import { PlaceholderPageView } from './views/PlaceholderPageView.jsx'
+import { StartPageView } from './views/StartPageView.jsx'
+
 function App() {
+  const navigationItems = getNavigationItems()
+  const [activeRoute, setActiveRoute] = useState('home')
+
+  const activeItem = navigationItems.find((item) => item.id === activeRoute)
+  const page = activeRoute === 'home'
+    ? <StartPageView model={presentStartPage()} />
+    : <PlaceholderPageView title={activeItem?.label ?? 'Page'} />
+
   return (
-    <main>
-      <h1>Life Memo</h1>
-    </main>
+    <AppShell
+      activeRoute={activeRoute}
+      navigationItems={navigationItems}
+      onNavigate={setActiveRoute}
+    >
+      {page}
+    </AppShell>
   )
 }
 
