@@ -27,5 +27,23 @@ export function getMonthRange(year, month) {
   }
 }
 
-// TODO: calculate a child's age from their birthday ("2 years, 3 months")
+// calculate a child's age from their birthday ("2 years, 3 months")
+export function calculateAge(birthday, referenceDate = new Date()) {
+  const birthDate = new Date(birthday)
+  const refDate = new Date(referenceDate)
+
+  if (birthDate > refDate) {
+    return null // Birthday is in the future, child hasn't been born yet
+  }
+
+  let years = refDate.getFullYear() - birthDate.getFullYear()
+  let months = refDate.getMonth() - birthDate.getMonth()
+
+  if (months < 0) {
+    years--
+    months += 12
+  }
+
+  return `${years} year${years !== 1 ? 's' : ''}, ${months} month${months !== 1 ? 's' : ''}`
+}
 // TODO: start/end of a week or year (for the summary)
