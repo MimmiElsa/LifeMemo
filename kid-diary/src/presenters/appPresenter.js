@@ -9,3 +9,13 @@ const navigationItems = [
 export function getNavigationItems() {
   return navigationItems.map((item) => ({ ...item }))
 }
+
+export function presentSideNavigation({ child = null } = {}) {
+  return {
+    appName: 'LifeMemo',
+    newMemoryLabel: 'New Memory',
+    childName: child?.name ?? 'No folder',
+    childInitial: (child?.name ?? '?').charAt(0).toUpperCase(),
+    switchFolderLabel: 'Switch Folder',
+  }
+}
