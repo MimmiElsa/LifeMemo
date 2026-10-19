@@ -1,6 +1,6 @@
 const navigationItems = [
   { id: 'home', label: 'Home', icon: 'home' },
-  { id: 'diary', label: 'Diary', icon: 'book' },
+  { id: 'scrapbook', label: 'Scrapbook', icon: 'book' },
   { id: 'calendar', label: 'Calendar', icon: 'calendar' },
   { id: 'milestones', label: 'Milestones', icon: 'star' },
   { id: 'settings', label: 'Settings', icon: 'settings' },
