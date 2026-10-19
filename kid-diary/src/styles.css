@@ -6,6 +6,33 @@
 
 body {
   margin: 0;
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #c4c4c4;
+}
+
+/* App frame: iPad landscape (1194x834) with bezel, centered, 24px margin, shrinks to fit */
+#root {
+  position: relative;
+  box-sizing: border-box;
+  width: min(1194px, calc(100vw - 48px), calc((100vh - 48px) * 1194 / 834));
+  aspect-ratio: 1194 / 834;
+  overflow: auto;
+  background: #fff;
+  border: 14px solid #1c1c1e;
+  border-radius: 36px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+  padding: 1rem;
+}
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 button {
@@ -13,7 +40,8 @@ button {
 }
 
 .app-content {
-  min-height: 80vh;
+  flex: 1;
+  overflow: auto;
   padding: 16px;
 }
 
@@ -27,4 +55,169 @@ button {
 .nav-item {
   cursor: pointer;
   padding: 8px 12px;
+}
+
+/* Welcome screen */
+.welcome-screen {
+  display: flex;
+  height: 100%;
+}
+
+.welcome-image {
+  flex: 1;
+  margin: 12px 0 12px 12px;
+  background: #d9d9d9;
+}
+
+.welcome-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+}
+
+.welcome-logo {
+  width: 54px;
+  height: 54px;
+  border-radius: 18px;
+}
+
+.welcome-tagline {
+  max-width: 260px;
+  margin: 24px 0 72px;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.25;
+}
+
+.welcome-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* FOLDER PICKER VIEW */
+.folderpicker-container {
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  display: flex;
+}
+
+.logo-header {
+  padding: 10px;
+
+}
+
+.folderpicker-container h1 {
+  margin: 48px 0 8px;
+  font-size: 32px;
+  text-align: center;
+}
+
+.folderpicker-container p {
+  margin: 0 0 40px;
+}
+
+.folder-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 48px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.folder-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  /* keeps the Add Folder tile level with the named folders */
+  justify-content: flex-end;
+}
+
+.folder-name {
+  font-size: 16px;
+}
+
+.folder-tile {
+  box-sizing: border-box;
+  width: 176px;
+  height: 184px;
+  border-radius: 36px;
+  cursor: pointer;
+}
+
+/* Existing folder: gradient stand-in until the folder artwork is added */
+.folder-tile--existing {
+  border: none;
+  background: linear-gradient(160deg, #e3a6f2 0%, #e9a9a9 100%);
+}
+
+/* Add Folder */
+.folder-tile--add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid #dcdcdc;
+  color: #808080;
+}
+
+.folder-add-plus {
+  font-size: 28px;
+  line-height: 1;
+  color: #000;
+}
+
+.folder-add-label {
+  font-size: 18px;
+}
+
+.folder-add-hint {
+  font-size: 8px;
+}
+
+.folder-add-form {
+  cursor: default;
+  font-size: 14px;
+}
+
+.folder-add-form input {
+  display: block;
+  width: 130px;
+  margin-top: 4px;
+}
+
+.folder-add-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.button-primary,
+.button-secondary {
+  padding: 10px 32px;
+  white-space: nowrap;
+  border-radius: 999px;
+  border: 1px solid #25282b;
+  cursor: pointer;
+}
+
+.button-primary {
+  background: #25282b;
+  color: #fff;
+}
+
+.button-secondary {
+  background: #fff;
+  color: #25282b;
 }
