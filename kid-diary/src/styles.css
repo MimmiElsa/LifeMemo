@@ -1,0 +1,30 @@
+:root {
+  font-family: sans-serif;
+  color: #000;
+  background: #fff;
+}
+
+body {
+  margin: 0;
+}
+
+button {
+  font: inherit;
+}
+
+.app-content {
+  min-height: 80vh;
+  padding: 16px;
+}
+
+.bottom-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 16px;
+}
+
+.nav-item {
+  cursor: pointer;
+  padding: 8px 12px;
+}
