@@ -1,8 +1,11 @@
+import orangeOpen from '../../assets/stickers/orange-open@3x 2.png'
+import orangeO from '../../assets/stickers/orange-o@3x 2.png'
+
 export function StartPageView({ model }) {
   return (
     <section className="startpage">
         <div>
-          <h3>Today's date</h3>
+          <h3>{model.todayLabel}</h3>
           <h1>{model.greeting}</h1>
         </div>
         
@@ -37,13 +40,30 @@ export function StartPageView({ model }) {
           </div>
           <div className="dashboard-right">
             <div className="this-week-div">
-
+              <h4 className="week-title">{model.weekTitle}</h4>
+              <ol className="week-days">
+                {model.weekDays.map((day, index) => (
+                  <li className="week-day" key={index}>
+                    <span className="week-day-label">{day.label}</span>
+                    <span
+                      className={`week-day-number${day.isToday ? ' week-day-number--today' : ''}${day.hasEntry ? ' week-day-number--entry' : ''}`}
+                    >
+                      {day.dayOfMonth}
+                    </span>
+                  </li>
+                ))}
+              </ol>
             </div>
             <div className="todays-entry-div">
-
+              <img alt="" aria-hidden="true" className="entry-sticker entry-sticker--top-right" src={orangeOpen} />
+              <img alt="" aria-hidden="true" className="entry-sticker entry-sticker--bottom-left" src={orangeO} />
+              <h2>{model.todaysPage.title}</h2>
+              <p>{model.todaysPage.description}</p>
+              <button className="add-to-today-button" type="button">
+                {model.todaysPage.addLabel}
+              </button>
             </div>
           </div>
-          
         </div>
     </section>
   
