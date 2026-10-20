@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { getNavigationItems } from './presenters/appPresenter.js'
+import { getNavigationItems, presentSideNavigation } from './presenters/appPresenter.js'
 import { presentStartPage } from './presenters/startPagePresenter.js'
 import { presentFolderPicker } from './presenters/folderPickerPresenter.js'
 import { presentWelcome } from './presenters/welcomePresenter.js'
@@ -36,16 +36,21 @@ function App() {
     )
   }
 
+  const activeChild = children.find((c) => c.id === activeChildId)
   const activeItem = navigationItems.find((item) => item.id === activeRoute)
+  const pageTitle = activeRoute === 'newMemory' ? 'New Memory' : activeItem?.label ?? 'Page'
   const page = activeRoute === 'home'
-    ? <StartPageView model={presentStartPage({ child: children.find((c) => c.id === activeChildId) })} />
-    : <PlaceholderPageView title={activeItem?.label ?? 'Page'} />
+    ? <StartPageView model={presentStartPage({ child: activeChild })} />
+    : <PlaceholderPageView title={pageTitle} />
 
   return (
     <AppShell
       activeRoute={activeRoute}
       navigationItems={navigationItems}
+      navigationModel={presentSideNavigation({ child: activeChild })}
       onNavigate={setActiveRoute}
+      onNewMemory={() => setActiveRoute('newMemory')}
+      onSwitchFolder={() => setStage('folders')}
     >
       {page}
     </AppShell>

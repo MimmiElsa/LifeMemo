@@ -3,11 +3,13 @@
   color: #000;
   background: #fff;
 }
-
+* {
+  box-sizing: border-box;
+}
 body {
   margin: 0;
-  box-sizing: border-box;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   padding: 24px;
   display: flex;
   align-items: center;
@@ -15,24 +17,26 @@ body {
   background: #c4c4c4;
 }
 
-/* App frame: iPad landscape (1194x834) with bezel, centered, 24px margin, shrinks to fit */
+/* App frame: a fixed iPad-landscape canvas (1194x834) with bezel. main.jsx scales it
+   down (--frame-scale) to fit the window with a 24px margin, so the layout inside never changes. */
 #root {
   position: relative;
   box-sizing: border-box;
-  width: min(1194px, calc(100vw - 48px), calc((100vh - 48px) * 1194 / 834));
-  aspect-ratio: 1194 / 834;
+  flex-shrink: 0;
+  width: 1194px;
+  height: 834px;
+  transform: scale(var(--frame-scale, 1));
   overflow: auto;
   background: #fff;
   border: 14px solid #1c1c1e;
   border-radius: 36px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
-  padding: 1rem;
 }
 
 .app-shell {
   display: flex;
-  flex-direction: column;
   height: 100%;
+  background: #e9edf2;
 }
 
 button {
@@ -42,19 +46,111 @@ button {
 .app-content {
   flex: 1;
   overflow: auto;
-  padding: 16px;
+  margin: 12px 12px 12px 0;
+  padding: 24px;
+  border-radius: 36px;
+  background: #fff;
 }
 
-.bottom-navigation {
+/* Side navigation */
+.side-navigation {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 16px;
+  flex-direction: column;
+  width: 200px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  padding: 18px 16px;
+}
+
+.side-nav-logo {
+  width: 30px;
+  height: 30px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+}
+
+.new-memory-button {
+  padding: 12px 0;
+  border: none;
+  border-radius: 999px;
+  background: #6ea8f7;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.side-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
 }
 
 .nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px;
+  border: none;
+  border-radius: 14px;
+  background: none;
+  color: #25282b;
   cursor: pointer;
-  padding: 8px 12px;
+}
+
+.nav-item--active {
+  background: #fff;
+}
+
+.nav-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+}
+
+.nav-item--active .nav-item-icon {
+  background: #d7e6fb;
+  color: #3d6fb5;
+}
+
+.folder-switcher {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+  padding: 10px;
+  border: none;
+  border-radius: 16px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.folder-switcher-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #e3a6f2;
+  font-weight: 600;
+}
+
+.folder-switcher-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.folder-switcher-text small {
+  color: #808080;
 }
 
 /* Welcome screen */
@@ -220,4 +316,259 @@ button {
 .button-secondary {
   background: #fff;
   color: #25282b;
+}
+
+/* ====== Home Page ====== */
+.dashboard {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+}
+
+.dashboard-left, .dashboard-right {
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-left {
+  width: 65%;
+}
+
+.dashboard-right {
+  width: 35%;
+}
+
+.daily-challenge-div {
+  background-image: url(../assets/img/dailychallenge.png);
+  background-position: center;
+  background-size: cover;
+  padding: 1rem;
+  width: 100%;
+  border-radius: 16px;
+}
+
+.card-title {
+  background: white;
+  color: black;
+  font-size: 14px;
+  padding: 8px 18px;
+  border-radius: 34px;
+  width: 150px;
+  text-align: center;
+}
+
+.card-button {
+  background: white;
+  color: black;
+  font-size: 14px;
+  padding: 12px 12px;
+  border-radius: 34px;
+  width: 100px;
+  text-align: center;
+}
+
+.card-h2 {
+  font-size: 32px;
+  width: 60%;
+}
+
+/* Interaction cards */
+.interaction-cards {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+}
+
+.interaction-card {
+  flex: 1;
+  box-sizing: border-box;
+  min-height: 190px;
+  padding: 16px;
+  border-radius: 24px;
+  background-repeat: no-repeat;
+  background-position: center bottom 12px;
+  background-size: 80% auto;
+}
+
+.interaction-card h4 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+
+.interaction-card p {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.activity-card {
+  background-color: #fdc88f;
+  background-image: url("../assets/img/activities@3x 1.png");
+}
+
+.conversation-topics {
+  background-color: #d9b8f5;
+  background-image: url("../assets/img/conversation@3x 1.png");
+}
+
+.use-illustrations {
+  background-color: #b2f08a;
+  background-image: url("../assets/img/illustrations@3x 1.png");
+}
+
+/* Dashboard right: This week + Today's Page */
+.dashboard-right {
+  gap: 16px;
+}
+
+.this-week-div {
+  box-sizing: border-box;
+  padding: 14px 16px;
+  border: 1px solid #1c1c1e;
+  border-radius: 20px;
+}
+
+.week-title {
+  margin: 0 0 10px;
+  font-size: 14px;
+}
+
+.week-days {
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.week-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.week-day-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: #555;
+}
+
+.week-day-number--entry {
+  background: #f9d9a6;
+  color: #25282b;
+}
+
+.week-day-number--today {
+  background: #000;
+  color: #fff;
+}
+
+.todays-entry-div {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, #fff09a 0%, #fff6c9 70%, #fff3d6 100%);
+  text-align: center;
+}
+
+.todays-entry-div h2 {
+  margin: 0 0 8px;
+  font-size: 22px;
+}
+
+.todays-entry-div p {
+  margin: 0 0 16px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.add-to-today-button {
+  padding: 8px 18px;
+  border: none;
+  border-radius: 999px;
+  background: #fff;
+  cursor: pointer;
+}
+
+/* Stickers in the corners of Today's Page (the artwork is pre-cropped, so it sits flush) */
+.entry-sticker {
+  position: absolute;
+  pointer-events: none;
+}
+
+.entry-sticker--top-right {
+  top: 0;
+  right: 0;
+  width: 34%;
+}
+
+.entry-sticker--bottom-left {
+  bottom: 0;
+  left: 0;
+  width: 46%;
+}
+
+/* Home page fills the panel height so nothing scrolls */
+.startpage {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.startpage .dashboard {
+  flex: 1;
+  min-height: 0;
+}
+
+.interaction-div {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.interaction-cards {
+  flex: 1;
+  min-height: 0;
+}
+
+.interaction-card {
+  min-height: 0;
+}
+
+/* Card proportions: tall challenge card, shorter interaction cards (as in the mockup) */
+.dashboard-left {
+  gap: 16px;
+}
+
+.daily-challenge-div {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 18px;
+  padding: 24px 32px;
+}
+
+.interaction-div {
+  flex: none;
+}
+
+.interaction-cards {
+  flex: none;
+  height: 236px;
 }
