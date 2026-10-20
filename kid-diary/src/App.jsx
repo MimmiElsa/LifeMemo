@@ -2,7 +2,10 @@ import { useState } from 'react'
 import { getNavigationItems, presentSideNavigation } from './presenters/appPresenter.js'
 import { presentStartPage } from './presenters/startPagePresenter.js'
 import { presentFolderPicker } from './presenters/folderPickerPresenter.js'
+import { presentScrapbook } from './presenters/scrapbookPresenter.js'
 import { presentWelcome } from './presenters/welcomePresenter.js'
+import { createScrapbook } from './backend/models.js'
+import { ScrapbookView } from './views/ScrapbookView.jsx'
 import { AppShell } from './views/AppShell.jsx'
 import { FolderPickerView } from './views/FolderPickerView.jsx'
 import { PlaceholderPageView } from './views/PlaceholderPageView.jsx'
@@ -12,7 +15,7 @@ import { WelcomeView } from './views/WelcomeView.jsx'
 function App() {
   const navigationItems = getNavigationItems()
   const [stage, setStage] = useState('welcome')
-  const [children, setChildren] = useState([{ id: 'child-lucas', name: 'Lucas' }])
+  const [children, setChildren] = useState([{ id: 'child-lucas', name: 'Lucas', scrapbook: createScrapbook() }])
   const [activeChildId, setActiveChildId] = useState(null)
   const [activeRoute, setActiveRoute] = useState('home')
 
@@ -29,7 +32,7 @@ function App() {
           setStage('app')
         }}
         onAddFolder={(name) =>
-          setChildren((current) => [...current, { id: crypto.randomUUID(), name }])
+          setChildren((current) => [...current, { id: crypto.randomUUID(), name, scrapbook: createScrapbook() }])
         }
         onBack={() => setStage('welcome')}
       />
@@ -39,9 +42,12 @@ function App() {
   const activeChild = children.find((c) => c.id === activeChildId)
   const activeItem = navigationItems.find((item) => item.id === activeRoute)
   const pageTitle = activeRoute === 'newMemory' ? 'New Memory' : activeItem?.label ?? 'Page'
-  const page = activeRoute === 'home'
-    ? <StartPageView model={presentStartPage({ child: activeChild })} />
-    : <PlaceholderPageView title={pageTitle} />
+  let page = <PlaceholderPageView title={pageTitle} />
+  if (activeRoute === 'home') {
+    page = <StartPageView model={presentStartPage({ child: activeChild })} />
+  } else if (activeRoute === 'scrapbook') {
+    page = <ScrapbookView model={presentScrapbook({ child: activeChild })} />
+  }
 
   return (
     <AppShell
