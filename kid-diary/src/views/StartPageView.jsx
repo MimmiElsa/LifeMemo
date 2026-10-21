@@ -11,13 +11,19 @@ export function StartPageView({ model, onOpenTemplate }) {
         
         <div className="dashboard">
           <div className="dashboard-left">
-            <div className="daily-challenge-div">
+            <div
+              className="daily-challenge-div daily-challenge-div--action"
+              onClick={() => onOpenTemplate('challenge')}
+              onKeyDown={(event) => event.key === 'Enter' && onOpenTemplate('challenge')}
+              role="button"
+              tabIndex={0}
+            >
               <div className="card-title">
-                Daily challenge
+                {model.dailyChallenge.tag}
               </div>
-              <h2 className="card-h2">Find three red things on the way home</h2>
+              <h2 className="card-h2">{model.dailyChallenge.title}</h2>
               <div className="card-button">
-                Let's do it!
+                {model.dailyChallenge.startLabel}
               </div>
             </div>
             <div className="interaction-div">
@@ -41,7 +47,7 @@ export function StartPageView({ model, onOpenTemplate }) {
                   tabIndex={0}
                 >
                   <h4>Conversation Topics</h4>
-                  <p>Scan the card to start it</p>
+                  <p>Let's talk! Get inspired</p>
                 </div>
                 <div className="interaction-card use-illustrations">
                   <h4>Use Illustrations</h4>

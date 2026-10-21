@@ -1,3 +1,4 @@
+import { getPicture } from '../backend/demoIdeas.js'
 import { toDayKey } from '../backend/utils/dates.js'
 import { MEDIA_LABELS } from './mediaLabels.js'
 
@@ -42,8 +43,10 @@ export function presentEntry({
     return {
       id: scrap.id,
       kind: scrap.kind,
-      label: milestone ? 'Milestone' : KIND_LABELS[scrap.kind],
+      label: milestone ? 'Milestone' : scrap.tag === 'challenge' ? 'Challenge' : KIND_LABELS[scrap.kind],
+      isChallenge: scrap.tag === 'challenge',
       text: scrap.text,
+      pictures: (scrap.pictures ?? []).map(getPicture).filter(Boolean),
       media: scrap.mediaIds.map((id) => media[id]).filter(Boolean),
       isMilestone: Boolean(milestone),
       milestoneTitle: milestone?.title ?? null,

@@ -1,3 +1,4 @@
+import { getMemoryTemplate } from '../backend/memoryTemplates.js'
 import { toDayKey } from '../backend/utils/dates.js'
 
 const WEEKDAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
@@ -32,6 +33,11 @@ export function presentStartPage({ child = null, recentEntries = [], entryDays =
     recentEntries: recentEntries.map((entry) => ({ ...entry })),
     hasChild: Boolean(child),
     todayLabel: formatToday(new Date()),
+    dailyChallenge: {
+      tag: 'Daily challenge',
+      title: getMemoryTemplate('challenge').prompt,
+      startLabel: "Let's do it!",
+    },
     weekTitle: 'This week',
     weekDays: getWeekDays(new Date(), entryDays),
     todaysPage: {

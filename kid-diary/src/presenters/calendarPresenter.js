@@ -35,7 +35,8 @@ function buildCells({ year, month, days, selectedDate, todayKey }) {
       inMonth,
       isToday: dayKey === todayKey,
       isSelected: dayKey === selectedDate,
-      hasEntry: Boolean(day),
+      // a day with only a mood is tinted, but has nothing to open yet
+      hasEntry: Boolean(day?.count),
       mood: day?.mood ?? null,
       count: day?.count ?? 0,
     }

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import blankFriend from '../../assets/stickers/pink-wink@3x 1.png'
 import { NavIcon } from './NavIcon.jsx'
+import { PictureArt } from './PictureArt.jsx'
 import { StickerLayer } from './StickerLayer.jsx'
 
 // One page of the open scrapbook: one entry (the page of one day) with the scraps on it and the
@@ -61,6 +62,7 @@ function Scrap({ actions, date, editing, labels, scrap, selected }) {
     'scrap',
     hasMedia ? 'scrap--media' : 'scrap--text',
     scrap.isMilestone && 'scrap--milestone',
+    scrap.isChallenge && 'scrap--challenge',
     scrap.isHighlighted && 'scrap--highlight',
     selected && 'scrap--selected',
   ]
@@ -115,6 +117,13 @@ function Scrap({ actions, date, editing, labels, scrap, selected }) {
           {scrap.label}
           {scrap.isMilestone && scrap.milestoneTitle ? ` · ${scrap.milestoneTitle}` : ''}
         </span>
+        {scrap.pictures.length > 0 && (
+          <span className="scrap-pictures">
+            {scrap.pictures.map((item) => (
+              <PictureArt key={item.id} option={item} size="scrap" />
+            ))}
+          </span>
+        )}
         {scrap.text && <p>{scrap.text}</p>}
       </article>
 

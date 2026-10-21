@@ -21,12 +21,12 @@ const SAMPLES = [
     extras: [['interaction', 'Sang "Blinka lilla stjärna" three times']],
   },
   {
-    title: 'First Midsummer', date: '2024-06-21', source: 'suggested', color: '#8FDDA9', mood: 'silly',
+    title: 'First Midsummer', date: '2024-06-21', source: 'suggested', color: '#8FDDA9', mood: 'playful',
     scrap: ['memory', 'Flower crown in the garden. Lucas tried to eat it.'],
     extras: [['activity', 'Picked seven flowers for the crown']],
   },
   {
-    title: 'First tooth', date: '2024-09-28', source: 'user', color: '#FFB27A', mood: 'sleepy',
+    title: 'First tooth', date: '2024-09-28', source: 'user', color: '#FFB27A', mood: 'dreamy',
     scrap: ['memory', 'A tiny white tooth at the bottom. Not a happy night, but a big day.'],
     extras: [],
   },
@@ -56,12 +56,12 @@ const SAMPLES = [
     extras: [['memory', 'Picked up with a painted handprint']],
   },
   {
-    title: 'First Lucia', date: '2025-12-13', source: 'suggested', color: '#FFB27A', mood: 'sleepy',
+    title: 'First Lucia', date: '2025-12-13', source: 'suggested', color: '#FFB27A', mood: 'dreamy',
     scrap: ['memory', 'Watched the Lucia procession with a candle-shaped biscuit.'],
     extras: [],
   },
   {
-    title: '2nd birthday', date: '2026-03-14', source: 'suggested', color: '#FF9FCB', mood: 'silly',
+    title: '2nd birthday', date: '2026-03-14', source: 'suggested', color: '#FF9FCB', mood: 'playful',
     scrap: ['memory', 'Two! A dinosaur cake and a very serious blowing-out of the candles.'],
     extras: [['activity', 'Dinosaur treasure hunt in the garden']],
   },

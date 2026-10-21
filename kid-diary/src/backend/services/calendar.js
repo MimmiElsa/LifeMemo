@@ -7,7 +7,7 @@
 import { getMonthRange } from '../utils/dates.js'
 import { getEntriesBetween, getScrapsForEntry } from './entries.js'
 
-// Days in a month that have a page with at least one scrap, with how many scraps
+// Days in a month that have a page with at least one scrap or a mood, with how many scraps
 // and how the child felt (the entry's mood, or null).
 // Month is 1–12 (1 = January).
 // getDaysWithEntries('abc', 2026, 10)
@@ -20,7 +20,7 @@ export async function getDaysWithEntries(childId, year, month) {
   const days = []
   for (const entry of entries) {
     const scraps = await getScrapsForEntry(entry.id)
-    if (scraps.length > 0) days.push({ date: entry.date, count: scraps.length, mood: entry.mood ?? null })
+    if (scraps.length > 0 || entry.mood) days.push({ date: entry.date, count: scraps.length, mood: entry.mood ?? null })
   }
   return days
 }

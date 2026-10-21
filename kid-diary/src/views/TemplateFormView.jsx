@@ -28,9 +28,17 @@ export function TemplateFormView({ model, onBack, onSave, recorder, template }) 
       </header>
 
       <div className="new-memory-heading">
+        {model.tag && <span className="challenge-tag">{model.tag}</span>}
         <h1>{model.title}</h1>
         <p>{model.subtitle}</p>
       </div>
+
+      {model.prompt && (
+        <div className="challenge-prompt">
+          <span>Today's challenge</span>
+          <strong>{model.prompt}</strong>
+        </div>
+      )}
 
       <div className="answer-list">
         {model.fields.map((field) => {
@@ -71,7 +79,7 @@ export function TemplateFormView({ model, onBack, onSave, recorder, template }) 
                   value={value}
                 />
               )}
-              {field.type === 'topic' && (
+              {field.suggestions && (
                 <span className="answer-suggestions">
                   {field.suggestions.map((suggestion) => (
                     <button

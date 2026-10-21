@@ -38,7 +38,7 @@ export function presentNewMemory({ date = toDayKey() } = {}) {
       hint: 'Mix photos, words and stickers freely',
       startLabel: 'Start blank',
     },
-    templates: MEMORY_TEMPLATES.map((template) => ({
+    templates: MEMORY_TEMPLATES.filter((template) => !template.hidden).map((template) => ({
       id: template.id,
       title: template.title,
       hint: template.hint,
@@ -54,10 +54,36 @@ export function presentTemplateForm({ template, date = toDayKey() }) {
     backLabel: 'Back',
     title: template.title,
     subtitle: `${template.hint} · ${forDayLabel(date).replace('For ', '')}`,
+    // a challenge shows its tag and what to do
+    tag: template.tag ? 'Challenge' : null,
+    prompt: template.prompt ?? null,
     color: TEMPLATE_COLORS[template.id],
     fields: template.fields,
     saveLabel: 'Add to the page',
     mediaLabels: MEDIA_LABELS,
+  }
+}
+
+// The picture screen of an interaction card (Activity, Conversation): the questions of a prompt
+// set that was picked for the category. `stepCount` is 2 when the mood step came first.
+export function presentPromptMemory({ template, set, showSteps = false }) {
+  return {
+    closeLabel: 'Close',
+    headerTitle: template.title,
+    step: 2,
+    stepCount: showSteps ? 2 : null,
+    title: set.title,
+    subtitle: 'Tap a picture, or add a note or your voice.',
+    color: TEMPLATE_COLORS[template.id],
+    backLabel: 'Back',
+    saveLabel: 'Save to scrapbook',
+    labels: {
+      pickOne: 'Pick one below',
+      note: 'Note',
+      voice: 'Voice',
+      notePlaceholder: 'Write a few words...',
+      media: MEDIA_LABELS,
+    },
   }
 }
 

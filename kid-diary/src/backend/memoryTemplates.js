@@ -8,7 +8,11 @@
 //   'photo'  a photo or video (a file)
 //   'audio'  an audio recording (a file)
 //
+// Activity and Conversation have no fields: they have prompt sets (see below), answered with pictures.
+//
 // Answers are kept in an object by field id: { what: 'Built a pillow fort', photo: File, ... }
+
+import { ACTIVITY_PROMPTS, CONVERSATION_PROMPTS, getDailyChallenge } from './demoIdeas.js'
 
 export const MEMORY_TEMPLATES = [
   {
@@ -16,12 +20,8 @@ export const MEMORY_TEMPLATES = [
     title: 'Activity',
     hint: 'Something you did together',
     kind: 'activity',
-    fields: [
-      { id: 'what', type: 'short', label: 'What did you do?', placeholder: 'Built a pillow fort', required: true },
-      { id: 'who', type: 'short', label: 'Who was there?', placeholder: 'Mum, Maya and Grandpa' },
-      { id: 'how', type: 'long', label: 'How did it go?', placeholder: 'What was funny or fun?' },
-      { id: 'photo', type: 'photo', label: 'A photo of it' },
-    ],
+    // answered on the picture screen: one of these prompt sets is picked each time
+    promptSets: ACTIVITY_PROMPTS,
   },
   {
     id: 'moment',
@@ -39,19 +39,30 @@ export const MEMORY_TEMPLATES = [
   {
     id: 'conversation',
     title: 'Conversation',
-    hint: 'New words from a card',
+    hint: 'Not sure what to talk about? Get inspired',
     kind: 'interaction',
+    promptSets: CONVERSATION_PROMPTS,
+  },
+  {
+    id: 'challenge',
+    title: 'Daily challenge',
+    hint: 'Do it together, then show the result',
+    kind: 'activity',
+    // the scrap is tagged, so the page shows it came from the challenge
+    tag: 'challenge',
+    // not in the "What do you want to add?" choices: it opens from the start page card
+    hidden: true,
+    // a new one each day
+    get prompt() {
+      return getDailyChallenge()
+    },
     fields: [
-      {
-        id: 'topic',
-        type: 'topic',
-        label: 'Topic',
-        placeholder: 'Choose a topic',
-        suggestions: ['A new word', 'A funny question', 'Something they asked', 'A song or a rhyme', 'What they think'],
-      },
-      { id: 'said', type: 'long', label: 'What was said?', placeholder: 'Write something', required: true },
-      { id: 'audio', type: 'audio', label: 'A recording of it' },
+      { id: 'photo', type: 'photo', label: 'Show the result: a photo or video' },
+      { id: 'audio', type: 'audio', label: 'Or tell us about it' },
+      { id: 'how', type: 'long', label: 'How did it go?', placeholder: 'What did you find?' },
     ],
+    // a photo, a recording or a few words is enough
+    needsOneOf: ['photo', 'audio', 'how'],
   },
   {
     id: 'milestone',
@@ -87,26 +98,64 @@ export function canSaveMemory(template, answers) {
 }
 
 // Turns the answers into what a scrap is made of:
-//   { kind, text, files, milestoneTitle }  (files is a list that can be empty; milestoneTitle can be null)
+//   { kind, tag, pictures, text, files, milestoneTitle }  (files is a list that can be empty; milestoneTitle can be null)
 // The words of each answer go on their own line, so the scrap reads like the questions did.
 export function buildScrapFromAnswers(template, answers) {
   const say = (fieldId) => (answers[fieldId] ?? '').trim()
   let lines = []
 
-  if (template.id === 'activity') {
-    lines = [say('what'), say('who') && `With ${say('who')}`, say('how')]
-  } else if (template.id === 'moment') {
+  if (template.id === 'moment') {
     lines = [say('story')]
-  } else if (template.id === 'conversation') {
-    lines = [say('topic') && `${say('topic')}:`, say('said')]
+  } else if (template.id === 'challenge') {
+    lines = [template.prompt, say('how')]
   } else if (template.id === 'milestone') {
     lines = [say('story') || say('title')]
   }
 
   return {
     kind: template.kind,
+    tag: template.tag ?? null,
+    pictures: [],
     text: lines.filter(Boolean).join('\n'),
     files: [answers.photo, answers.audio].filter(Boolean),
     milestoneTitle: template.isMilestone ? say('title') : null,
   }
+}
+
+// ---- Prompt screens (Activity and Conversation) ----
+// A prompt set is a heading with a few questions. The answers are kept by question id:
+//   { did: { picture: 'ball', note: 'We scored!', audio: File }, ate: { picture: 'toast' } }
+
+// A prompt set of the template, picked at random
+export function pickPromptSet(template) {
+  const sets = template?.promptSets
+  return sets ? sets[Math.floor(Math.random() * sets.length)] : null
+}
+
+function promptAnswer(question, answer = {}) {
+  const picture = question.pictures.find((item) => item.id === answer.picture)
+  return { picture, note: (answer.note ?? '').trim(), audio: answer.audio ?? null }
+}
+
+// Whether anything is answered yet
+export function canSavePrompt(set, answers) {
+  return set.questions.some((question) => {
+    const { picture, note, audio } = promptAnswer(question, answers[question.id])
+    return Boolean(picture || note || audio)
+  })
+}
+
+// The answers as a scrap: the same shape buildScrapFromAnswers gives.
+// Each answered question is a line (its note, or the picture's name), the pictures go on the scrap.
+export function buildScrapFromPrompt(template, set, answers) {
+  const lines = []
+  const pictures = []
+  const files = []
+  for (const question of set.questions) {
+    const { picture, note, audio } = promptAnswer(question, answers[question.id])
+    if (picture) pictures.push(picture.id)
+    if (audio) files.push(audio)
+    if (note || picture) lines.push(`${question.label} ${note || picture.label}`)
+  }
+  return { kind: template.kind, tag: null, pictures, text: lines.join('\n'), files, milestoneTitle: null }
 }

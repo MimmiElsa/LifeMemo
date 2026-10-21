@@ -1,5 +1,6 @@
 import blueSmile from '../../assets/stickers/blue-smile@3x 1.png'
 import pinkWink from '../../assets/stickers/pink-wink@3x 1.png'
+import { MOOD_FACES } from './moodFaces.js'
 import yellowOpen from '../../assets/stickers/yellow-open@3x 1.png'
 import { NavIcon } from './NavIcon.jsx'
 
@@ -24,7 +25,7 @@ function SummaryCard({ card, tilt }) {
     case 'mood':
       return (
         <article className={`sum-card sum-card--mood sum-card--mood-${card.mood}`} style={style}>
-          <img alt="" aria-hidden="true" className="sum-card-sticker" src={pinkWink} />
+          <img alt="" aria-hidden="true" className="sum-card-sticker" src={MOOD_FACES[card.mood] ?? pinkWink} />
           <span className="sum-card-label">{card.label}</span>
           <h3>{card.title}</h3>
         </article>
