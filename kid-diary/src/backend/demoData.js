@@ -1,6 +1,6 @@
 // Demo data for the exhibition: Lucas already has a tower and some scrapbook days.
 // Replace with real saved data once children and milestones are stored too.
-import { createEntry, createScrap, createScrapbook } from './models.js'
+import { createEntry, createMilestone, createScrap, createScrapbook } from './models.js'
 import { createSampleMilestones, LUCAS_BIRTHDAY } from './sampleMilestones.js'
 import { put } from './store.js'
 
@@ -8,14 +8,6 @@ export const LUCAS_ID = 'child-lucas'
 
 // Built once, so the milestones keep pointing at the scraps saved in the store.
 const sample = createSampleMilestones(LUCAS_ID)
-
-export const LUCAS_DEMO = {
-  id: LUCAS_ID,
-  name: 'Lucas',
-  birthday: LUCAS_BIRTHDAY,
-  milestones: sample.milestones,
-  scrapbook: createScrapbook(),
-}
 
 // A few recent days with a mood and some scraps, so the calendar has something to show.
 const RECENT_DAYS = [
@@ -25,24 +17,53 @@ const RECENT_DAYS = [
   ['2026-10-04', 'calm', [
     ['memory', 'Said a new word: cabbage'],
     ['activity', 'Leaf treasure hunt in the park'],
+    ['memory', 'Brushed my own teeth, all by myself!', 'Brushed my own teeth'],
   ]],
+  ['2026-10-09', 'silly', [['interaction', 'Splashed in the bath and sang to the rubber duck']]],
   ['2026-10-12', 'sleepy', [['memory', 'Fell asleep in the car']]],
+  ['2026-10-17', 'happy', [
+    ['activity', 'Baked apple muffins together'],
+    ['memory', 'Said "tack" to the baker without being asked'],
+  ]],
 ]
 
+// An item can have a third part: the title of a milestone that marks that scrap.
 function createRecentDays() {
   const entries = []
   const scraps = []
+  const milestones = []
   for (const [date, mood, items] of RECENT_DAYS) {
     const entry = createEntry({ childId: LUCAS_ID, date, mood })
     entries.push(entry)
-    for (const [kind, text] of items) {
-      scraps.push(createScrap({ entryId: entry.id, kind, text }))
+    for (const [kind, text, milestoneTitle] of items) {
+      const scrap = createScrap({ entryId: entry.id, kind, text })
+      scraps.push(scrap)
+      if (milestoneTitle) {
+        milestones.push(
+          createMilestone({
+            childId: LUCAS_ID,
+            title: milestoneTitle,
+            date,
+            scrapId: scrap.id,
+            source: 'user',
+            color: '#8FDDA9',
+          }),
+        )
+      }
     }
   }
-  return { entries, scraps }
+  return { entries, scraps, milestones }
 }
 
 const recent = createRecentDays()
+
+export const LUCAS_DEMO = {
+  id: LUCAS_ID,
+  name: 'Lucas',
+  birthday: LUCAS_BIRTHDAY,
+  milestones: [...sample.milestones, ...recent.milestones],
+  scrapbook: createScrapbook(),
+}
 
 let seeding = null
 

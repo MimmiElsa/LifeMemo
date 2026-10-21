@@ -13,6 +13,7 @@ import { LUCAS_DEMO, seedDemoData } from './backend/demoData.js'
 import { toDayKey } from './backend/utils/dates.js'
 import { useCalendar } from './hooks/useCalendar.js'
 import { useEntryDay } from './hooks/useEntryDay.js'
+import { useMonthlySummary } from './hooks/useMonthlySummary.js'
 import { getNavigationItems, presentSideNavigation } from './presenters/appPresenter.js'
 import { presentStartPage } from './presenters/startPagePresenter.js'
 import { presentCalendar } from './presenters/calendarPresenter.js'
@@ -21,6 +22,7 @@ import { presentMilestones } from './presenters/milestonesPresenter.js'
 import { presentNewMemory } from './presenters/newMemoryPresenter.js'
 import { presentEntry } from './presenters/entryPresenter.js'
 import { presentScrapbook } from './presenters/scrapbookPresenter.js'
+import { presentSummary } from './presenters/summaryPresenter.js'
 import { presentWelcome } from './presenters/welcomePresenter.js'
 import { createScrapbook } from './backend/models.js'
 import { AppShell } from './views/AppShell.jsx'
@@ -31,6 +33,7 @@ import { NewMemoryView } from './views/NewMemoryView.jsx'
 import { PlaceholderPageView } from './views/PlaceholderPageView.jsx'
 import { ScrapbookView } from './views/ScrapbookView.jsx'
 import { StartPageView } from './views/StartPageView.jsx'
+import { SummaryView } from './views/SummaryView.jsx'
 import { WelcomeView } from './views/WelcomeView.jsx'
 
 function App() {
@@ -46,11 +49,25 @@ function App() {
   const [highlightScrapId, setHighlightScrapId] = useState(null)
   // a page turn in progress: { date, direction: 'next' | 'previous', details, neighbours }
   const [turn, setTurn] = useState(null)
+  // the month the summary page looks back at, and a counter that picks new random scraps
+  const [summaryMonth, setSummaryMonth] = useState(() => ({
+    year: new Date().getFullYear(),
+    month: new Date().getMonth() + 1,
+  }))
+  const [summaryShuffle, setSummaryShuffle] = useState(0)
   const [status, setStatus] = useState('')
   const [busy, setBusy] = useState(false)
   const [recording, setRecording] = useState(false)
   const videoStopRef = useRef(null)
   const calendar = useCalendar(activeChildId, activeRoute === 'calendar')
+  const summaryData = useMonthlySummary(
+    activeChildId,
+    summaryMonth.year,
+    summaryMonth.month,
+    activeRoute === 'summary',
+    children.find((c) => c.id === activeChildId)?.milestones,
+    summaryShuffle,
+  )
   const entryDay = useEntryDay(activeChildId, entryDate, activeRoute === 'scrapbook', scraps.length)
 
   // put Lucas's demo days in the store, so the calendar has something to show
@@ -114,7 +131,11 @@ function App() {
           milestoneScrapIds,
         })}
         onNextMonth={calendar.showNextMonth}
-        onOpenSummary={() => {}}
+        onOpenSummary={() => {
+          setSummaryMonth({ year: calendar.year, month: calendar.month })
+          setSummaryShuffle((count) => count + 1)
+          setActiveRoute('summary')
+        }}
         onPreviousMonth={calendar.showPreviousMonth}
         onSelectDate={calendar.selectDate}
         onViewEntry={(date, scrapId = null) => openEntry(date, scrapId)}
@@ -250,11 +271,23 @@ function App() {
     page = renderScrapbook()
   } else if (activeRoute === 'calendar') {
     page = renderCalendar()
+  } else if (activeRoute === 'summary') {
+    page = (
+      <SummaryView
+        model={presentSummary({
+          child: activeChild,
+          summary: summaryData.summary,
+          mediaUrls: summaryData.mediaUrls,
+        })}
+        onBack={() => setActiveRoute('calendar')}
+        onShuffle={() => setSummaryShuffle((count) => count + 1)}
+      />
+    )
   }
 
   return (
     <AppShell
-      activeRoute={activeRoute}
+      activeRoute={activeRoute === 'summary' ? 'calendar' : activeRoute}
       navigationItems={navigationItems}
       navigationModel={presentSideNavigation({ child: activeChild })}
       onNavigate={(route) => {
