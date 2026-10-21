@@ -152,6 +152,8 @@ export function EntryView({ actions, labels, model, side, turn, ui }) {
     return <div className={`entry-page entry-page--${side} entry-page--empty`} />
   }
 
+  const showEditButton = !(model.isEmpty && !ui.editing)
+
   return (
     <div className={`entry-page entry-page--${side}`} onClick={() => actions.selectScrap(model.date, null)}>
       <header className="entry-header">
@@ -159,18 +161,21 @@ export function EntryView({ actions, labels, model, side, turn, ui }) {
           <span className="entry-weekday">{model.weekdayLabel}</span>
           <h2>{model.dayLabel}</h2>
         </div>
-        <button
-          aria-pressed={ui.editing}
-          className={`entry-edit-button${ui.editing ? ' is-active' : ''}`}
-          onClick={(event) => {
-            event.stopPropagation()
-            actions.toggleEdit(model.date)
-          }}
-          type="button"
-        >
-          <NavIcon name="pencil" size={16} />
-          {labels.editEntry}
-        </button>
+        {/* a blank page only offers "Add a memory"; its edit button comes once it is being edited */}
+        {showEditButton && (
+          <button
+            aria-pressed={ui.editing}
+            className={`entry-edit-button${ui.editing ? ' is-active' : ''}`}
+            onClick={(event) => {
+              event.stopPropagation()
+              actions.toggleEdit(model.date)
+            }}
+            type="button"
+          >
+            <NavIcon name="pencil" size={16} />
+            {labels.editEntry}
+          </button>
+        )}
       </header>
 
       {/* the "still blank" note is hidden while the page is being edited, and comes back if nothing was added */}
