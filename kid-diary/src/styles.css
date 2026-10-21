@@ -3010,6 +3010,7 @@ button {
 }
 
 [data-theme='dark'] #root .screen :is(img, video, canvas),
+[data-theme='dark'] #root .screen span.picture-art,
 [data-theme='dark'] #root .screen .folder-tile--existing[style] {
   filter: invert(1) hue-rotate(180deg);
 }
@@ -4005,4 +4006,219 @@ button {
   font: 400 15px Inter, sans-serif;
   color: #141a26;
   resize: none;
+}
+
+/* ====== Picture library ====== */
+.illus-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.illus-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.illus-header h1 {
+  margin: 0;
+  font-family: Fredoka, sans-serif;
+  font-size: 34px;
+  font-weight: 600;
+}
+
+.illus-header p {
+  margin: 2px 0 0;
+  color: #5b6577;
+}
+
+.illus-back {
+  position: static;
+  flex-shrink: 0;
+}
+
+.illus-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.illus-category {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px 6px 8px;
+  border: 2px solid #e1e5ec;
+  border-radius: 999px;
+  background: #fff;
+  color: #25282b;
+  font: 600 15px Fredoka, sans-serif;
+  cursor: pointer;
+  transition: background-color 0.15s, transform 0.15s;
+}
+
+.illus-category:hover {
+  transform: translateY(-2px);
+}
+
+.illus-category.is-active {
+  border-color: #25282b;
+  background: #25282b;
+  color: #fff;
+}
+
+.illus-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  animation: fade-up 0.3s cubic-bezier(0.22, 0.8, 0.3, 1) backwards;
+}
+
+.illus-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 170px;
+  border: 2px solid #eef0f4;
+  border-radius: 28px;
+  background: #f7f9fc;
+  color: #141a26;
+  font: 600 20px Fredoka, sans-serif;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+}
+
+.illus-card:hover {
+  transform: translateY(-3px);
+  border-color: #cfd5de;
+  box-shadow: 0 8px 18px rgba(40, 60, 100, 0.12);
+}
+
+.illus-card:active {
+  transform: scale(0.97);
+}
+
+.picture-art--tab {
+  width: 32px;
+  height: 32px;
+  font-size: 24px;
+  object-fit: contain;
+}
+
+.picture-art--card {
+  width: 86px;
+  height: 86px;
+  font-size: 66px;
+  object-fit: contain;
+}
+
+.picture-art--huge {
+  width: 220px;
+  height: 220px;
+  font-size: 170px;
+  object-fit: contain;
+}
+
+.illus-viewer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(20, 26, 38, 0.5);
+}
+
+.illus-viewer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 640px;
+  max-width: calc(100% - 48px);
+  padding: 36px 28px;
+  border-radius: 36px;
+  background: #fff;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+  animation: viewer-pop 0.25s cubic-bezier(0.22, 1.2, 0.36, 1) backwards;
+}
+
+.illus-viewer-picture {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  animation: fade-up 0.25s ease backwards;
+}
+
+.illus-viewer-picture strong {
+  font-family: Fredoka, sans-serif;
+  font-size: 44px;
+  font-weight: 600;
+}
+
+.illus-viewer-arrow,
+.illus-viewer-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1.5px solid #e1e5ec;
+  border-radius: 50%;
+  background: #fff;
+  color: #141a26;
+  cursor: pointer;
+}
+
+.illus-viewer-arrow {
+  width: 56px;
+  height: 56px;
+}
+
+.illus-viewer-arrow:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.illus-viewer-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+}
+
+.illus-say {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border: 0;
+  border-radius: 999px;
+  background: #e3f0ff;
+  color: #1f4f8f;
+  font: 600 16px Inter, sans-serif;
+  cursor: pointer;
+}
+
+.illus-say:hover {
+  background: #d2e5fb;
+}
+
+@keyframes viewer-pop {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: none; }
+}
+
+.use-illustrations {
+  cursor: pointer;
 }
