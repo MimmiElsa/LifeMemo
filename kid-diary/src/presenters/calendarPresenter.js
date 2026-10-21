@@ -88,6 +88,11 @@ export function presentCalendar({
         text: scrap.text || 'Photo or video',
       })),
       emptyLabel: 'Nothing added on this day yet.',
+      // an entry can be started on a day that has passed (or today), never on a day to come
+      canStartEntry: !details && selectedDate <= toDayKey(today),
+      startEntryLabel: 'Start an entry',
+      startEntryHint: 'Forgot to write it down? You can still add it.',
+      futureLabel: 'This day has not come yet.',
       viewEntryLabel: 'View entry',
     },
     placeholder: 'Pick a day to see what happened.',

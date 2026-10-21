@@ -2846,3 +2846,36 @@ button {
   color: #fff;
   cursor: pointer;
 }
+
+/* An empty day on the calendar: start an entry for it */
+.day-card-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.day-card-hint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #7b8494;
+}
+
+.start-entry-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 11px 18px;
+  border: 0;
+  border-radius: 22px;
+  background: #b9d7f5;
+  font: 600 14px Fredoka, sans-serif;
+  color: #141a26;
+  cursor: pointer;
+}
+
+.start-entry-button:hover {
+  background: #a5caf0;
+}

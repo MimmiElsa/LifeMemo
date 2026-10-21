@@ -173,6 +173,7 @@ function TurningLeaf({ actions, current, labels, onComplete, turn, uiFor }) {
 }
 
 export function ScrapbookView({
+  initialEditDate = null,
   initiallyOpen = false,
   model,
   onAddScrap,
@@ -203,7 +204,7 @@ export function ScrapbookView({
   // Which scrap is tapped, and which entry is being edited. Each page of the book is its own
   // entry, so only the entry whose edit button was pressed goes into edit mode.
   const [selection, setSelection] = useState({ date: null, id: null })
-  const [editDate, setEditDate] = useState(null)
+  const [editDate, setEditDate] = useState(initialEditDate)
   // the popup that is open: { type: 'scrap' | 'milestone' | 'sticker', date, scrap?, variant? }
   const [modal, setModal] = useState(null)
 

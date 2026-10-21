@@ -4,6 +4,7 @@ import {
   addSticker,
   attachMediaToScrap,
   deleteScrap,
+  getOrCreateEntry,
   moveScrap,
   moveSticker,
   recordPhoto,
@@ -57,6 +58,15 @@ function spreadAround(date, pageDates) {
   }
 }
 
+// A place near the middle of a page, a little crooked, for a new sticker
+function randomStickerSpot() {
+  return {
+    x: 30 + Math.random() * 40,
+    y: 35 + Math.random() * 30,
+    rotation: Math.round(Math.random() * 30 - 15),
+  }
+}
+
 function App() {
   const navigationItems = getNavigationItems()
   const [stage, setStage] = useState('welcome')
@@ -66,6 +76,8 @@ function App() {
   // a number that goes up whenever something in the store changed, so the pages are read again
   const [dataVersion, setDataVersion] = useState(0)
   const [scrapbookInitiallyOpen, setScrapbookInitiallyOpen] = useState(false)
+  // the entry that is in edit mode when the book opens (a day just started from the calendar)
+  const [scrapbookEditDate, setScrapbookEditDate] = useState(null)
   // which day's entry the scrapbook shows, and the scrap to point out on it
   const [entryDate, setEntryDate] = useState(() => toDayKey())
   const [highlightScrapId, setHighlightScrapId] = useState(null)
@@ -164,14 +176,16 @@ function App() {
         }}
         onPreviousMonth={calendar.showPreviousMonth}
         onSelectDate={calendar.selectDate}
+        onStartEntry={startEntry}
         onViewEntry={(date, scrapId = null) => openEntry(date, scrapId)}
       />
     )
   }
 
   // Show a day's entry in the scrapbook, with the book already open (and a scrap pointed out)
-  function openEntry(date, scrapId = null) {
+  function openEntry(date, scrapId = null, startEditing = false) {
     setTurn(null)
+    setScrapbookEditDate(startEditing ? date : null)
     setEntryDate(date)
     setHighlightScrapId(scrapId)
     setScrapbookInitiallyOpen(true)
@@ -209,6 +223,14 @@ function App() {
 
   function refreshData() {
     setDataVersion((version) => version + 1)
+  }
+
+  // Start the entry of a day (from the calendar), also one that has passed: its page is made,
+  // and the book opens on it, ready to add to
+  async function startEntry(date) {
+    await getOrCreateEntry(activeChildId, date)
+    refreshData()
+    openEntry(date, null, true)
   }
 
   // Add a scrap (and its photo or video, if one was picked) to an entry
@@ -278,9 +300,7 @@ function App() {
       childId: activeChildId,
       date,
       sticker: stickerId,
-      x: 30 + Math.random() * 40,
-      y: 35 + Math.random() * 30,
-      rotation: Math.round(Math.random() * 30 - 15),
+      ...randomStickerSpot(),
     })
     refreshData()
   }
@@ -314,6 +334,7 @@ function App() {
 
     return (
       <ScrapbookView
+        initialEditDate={scrapbookEditDate}
         initiallyOpen={scrapbookInitiallyOpen}
         model={presentScrapbook({ child: activeChild })}
         onAddScrap={addScrapToPage}
@@ -425,6 +446,7 @@ function App() {
       onNavigate={(route) => {
         if (route === 'scrapbook') {
           setTurn(null)
+          setScrapbookEditDate(null)
           setScrapbookInitiallyOpen(false)
           setEntryDate(toDayKey())
           setHighlightScrapId(null)
