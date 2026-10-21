@@ -5,6 +5,7 @@
 
 import { createEntry, createScrap } from '../models.js'
 import { get, getAll, put } from '../store.js'
+import { toDayKey } from '../utils/dates.js'
 
 // The page for this child on this day, created the first time it is needed.
 // getOrCreateEntry('abc', '2026-10-15')
@@ -26,6 +27,22 @@ export async function addScrap({ childId, date, ...fields }) {
   const scrap = createScrap({ entryId: entry.id, ...fields })
   await put('scraps', scrap)
   return scrap
+}
+
+// The pages on either side of a day, for turning pages in the scrapbook.
+// Pages are the child's entries plus today's page (which is always there to add to).
+// Returns day keys, or null at the first/last page.
+// getNeighbouringEntryDates('abc', '2026-10-04') -> { previous: '2026-10-03', next: '2026-10-12' }
+export async function getNeighbouringEntryDates(childId, date, today = toDayKey()) {
+  const all = await getAll('entries')
+  const days = new Set(all.filter((entry) => entry.childId === childId).map((entry) => entry.date))
+  days.add(today)
+
+  const sorted = [...days].sort()
+  return {
+    previous: [...sorted].reverse().find((day) => day < date) ?? null,
+    next: sorted.find((day) => day > date) ?? null,
+  }
 }
 
 // All scraps on one entry's page, oldest first.

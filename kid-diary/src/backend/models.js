@@ -79,6 +79,32 @@ export function createChild ({ name, birthday }){
 };
 
 
+// Scrapbook - the book belonging to ONE child's folder. Every child gets
+// their own copy (created fresh here), so editing one book never touches another.
+//   coverColor: cloth colour of the cover
+//   title:      the book's name under the child's name on the label
+//   volume:     small line at the bottom of the label
+//   greeting:   the speech-bubble sticker on the cover
+//   polaroids:  taped photos on the cover (scene = which drawing, caption = handwriting)
+export function createScrapbook({
+  coverColor = '#7FAEE6',
+  title = 'Little Book of Big Days',
+  volume = 'Volume 1',
+  greeting = 'Hej!',
+} = {}) {
+  return {
+    coverColor,
+    title,
+    volume,
+    greeting,
+    polaroids: [
+      { id: 'polaroid-1', scene: 'puddle', caption: 'first puddle' },
+      { id: 'polaroid-2', scene: 'fort', caption: 'blanket fort' },
+    ],
+  }
+}
+
+
 // TODO: Media     – id, scrapId, kind (photo / video / audio / drawing), file
 // Milestone - one block in a child's tower ("First steps").
 //   scrapId: the scrap this milestone marks (its entry is the page "Go to entry" opens).
@@ -105,5 +131,3 @@ export function createMilestone({ childId, title, date, scrapId = null, source =
     createdAt: new Date().toISOString(),
   }
 }
-
-

@@ -7,6 +7,38 @@ const paths = {
       <path d="M4 10h16M9 3v4M15 3v4" />
     </>
   ),
+  pencil: (
+    <>
+      <path d="M4 20l4-1 11-11-3-3L5 16z" />
+      <path d="M14 7l3 3" />
+    </>
+  ),
+  close: <path d="M6 6l12 12M18 6L6 18" />,
+  summary: (
+    <>
+      <path d="M5 20V10M12 20V4M19 20v-7" />
+    </>
+  ),
+  plus: <path d="M12 5v14M5 12h14" />,
+  clock: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7.5V12l3 2" />
+    </>
+  ),
+  shuffle: <path d="M4 7h3c5 0 5 10 10 10h3M4 17h3c2 0 3-1.5 4-3.5M13 9.5c1-2 2-2.5 4-2.5h3M17 4l3 3-3 3M17 14l3 3-3 3" />,
+  mic: (
+    <>
+      <rect x="9" y="3" width="6" height="11" rx="3" />
+      <path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" />
+    </>
+  ),
+  search: (
+    <>
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="m16 16 4 4" />
+    </>
+  ),
   blocks: (
     <>
       <rect x="4" y="13" width="7" height="7" rx="1.5" />
@@ -14,7 +46,6 @@ const paths = {
       <rect x="8.5" y="4" width="7" height="7" rx="1.5" />
     </>
   ),
-  plus: <path d="M12 5v14M5 12h14" />,
   'chevron-left': <path d="m15 6-6 6 6 6" />,
   'chevron-right': <path d="m9 6 6 6-6 6" />,
   'arrow-right': <path d="M5 12h14M13 6l6 6-6 6" />,
@@ -29,19 +60,19 @@ const paths = {
   ),
 }
 
-export function NavIcon({ name }) {
+export function NavIcon({ name, size = 20 }) {
   return (
     <svg
       aria-hidden="true"
       className="nav-icon"
       fill="none"
-      height="20"
+      height={size}
       stroke="currentColor"
       strokeLinecap="round"
       strokeLinejoin="round"
       strokeWidth="1.6"
       viewBox="0 0 24 24"
-      width="20"
+      width={size}
     >
       {paths[name]}
     </svg>

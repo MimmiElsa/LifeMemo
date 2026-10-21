@@ -1,6 +1,6 @@
 // Demo data for the exhibition: Lucas already has a tower and some scrapbook days.
 // Replace with real saved data once children and milestones are stored too.
-import { createEntry, createScrap } from './models.js'
+import { createEntry, createScrap, createScrapbook } from './models.js'
 import { createSampleMilestones, LUCAS_BIRTHDAY } from './sampleMilestones.js'
 import { put } from './store.js'
 
@@ -14,6 +14,7 @@ export const LUCAS_DEMO = {
   name: 'Lucas',
   birthday: LUCAS_BIRTHDAY,
   milestones: sample.milestones,
+  scrapbook: createScrapbook(),
 }
 
 // A few recent days with a mood and some scraps, so the calendar has something to show.

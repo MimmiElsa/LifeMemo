@@ -28,7 +28,7 @@ function DateLabel({ block }) {
   )
 }
 
-function TowerBlock({ block }) {
+function TowerBlock({ block, onOpen }) {
   return (
     <div className="tower-row">
       <div className="tower-side tower-side--left">
@@ -48,6 +48,7 @@ function TowerBlock({ block }) {
             '--block-width': `${block.width}px`,
             '--block-transform': `translateX(${block.shift}px) rotate(${block.tilt}deg)`,
           }}
+          onClick={block.scrapId ? () => onOpen(block) : undefined}
           type="button"
         >
           <span className="tower-block-badge">
@@ -69,7 +70,7 @@ function TowerBlock({ block }) {
   )
 }
 
-export function MilestonesView({ model }) {
+export function MilestonesView({ model, onOpenMilestone }) {
   const towerRef = useRef(null)
   const [atTop, setAtTop] = useState(true)
   const [atBottom, setAtBottom] = useState(true)
@@ -128,7 +129,7 @@ export function MilestonesView({ model }) {
                   <span className="tower-today-line" />
                 </div>
               ) : (
-                <TowerBlock block={row} key={row.id} />
+                <TowerBlock block={row} key={row.id} onOpen={onOpenMilestone} />
               ),
             )}
 
