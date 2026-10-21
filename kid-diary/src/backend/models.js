@@ -46,7 +46,9 @@ export function createEntry({ childId, date = toDayKey(), mood = null }) {
 //   entryId:  the page it sits on
 //   kind:     one of SCRAP_KINDS
 //   mediaIds: ids of photos/videos/audio/drawings attached to it
-export function createScrap({ entryId, kind = 'memory', text = '', emojis = [] }) {
+//   position: where it comes in the entry (0 = first). null until the entry's scraps
+//             have been given an order; scraps without one come first, oldest first.
+export function createScrap({ entryId, kind = 'memory', text = '', emojis = [], position = null }) {
   if (!entryId) throw new Error('A scrap needs an entryId')
   if (!SCRAP_KINDS.includes(kind)) throw new Error(`Unknown scrap kind: ${kind}`)
 
@@ -58,9 +60,20 @@ export function createScrap({ entryId, kind = 'memory', text = '', emojis = [] }
     text,
     emojis,
     mediaIds: [],
+    position,
     createdAt: now,
     updatedAt: now,
   }
+}
+
+// Sticker - a sticker stuck on an entry's spread (the two facing pages).
+//   sticker:  which sticker (an id from the sticker catalog in the app)
+//   x, y:     where its centre is, in percent of the spread (0-100)
+//   rotation: degrees
+export function createSticker({ sticker, x = 50, y = 50, rotation = 0 }) {
+  if (!sticker) throw new Error('A sticker needs a sticker id')
+
+  return { id: createId(), sticker, x, y, rotation }
 }
 
 

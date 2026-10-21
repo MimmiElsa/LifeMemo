@@ -6,16 +6,53 @@ export function SideNavigation({
   items,
   model,
   onNavigate,
-  onNewMemory,
   onSwitchFolder,
+  quick,
 }) {
   return (
     <nav className="side-navigation" aria-label="Main navigation">
       <img className="side-nav-logo" src={logo} alt={model.appName} />
 
-      <button className="new-memory-button" onClick={onNewMemory} type="button">
-        <span aria-hidden="true">+</span> {model.newMemoryLabel}
-      </button>
+      {/* Quick memory: the button turns into "Close" while its menu is open */}
+      <div className="quick-memory">
+        <button
+          aria-expanded={quick.open}
+          className={`new-memory-button${quick.open ? ' is-open' : ''}`}
+          onClick={quick.onToggle}
+          type="button"
+        >
+          {quick.open ? (
+            <>
+              <NavIcon name="close" size={16} />
+              {quick.model.closeLabel}
+            </>
+          ) : (
+            <>
+              <span aria-hidden="true">+</span> {model.newMemoryLabel}
+            </>
+          )}
+        </button>
+
+        {quick.open && (
+          <div className="quick-menu" role="menu">
+            <div className="quick-menu-title">{quick.model.title}</div>
+            {quick.model.options.map((option) => (
+              <button
+                className="quick-option"
+                key={option.id}
+                onClick={() => quick.onPick(option)}
+                role="menuitem"
+                type="button"
+              >
+                <span className={`quick-option-tile quick-option-tile--${option.id}`}>
+                  <NavIcon name={option.icon} size={18} />
+                </span>
+                {option.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       <ul className="side-nav-list">
         {items.map((item) => (
