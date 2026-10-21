@@ -55,7 +55,9 @@ export function presentEntry({
   return {
     date,
     entryId: page?.entry.id ?? null,
-    dateLabel: `${WEEKDAYS[day.getDay()]}, ${day.getDate()} ${MONTHS[day.getMonth()]} ${day.getFullYear()}`,
+    // the date on two rows: the weekday above, the day and month below
+    weekdayLabel: WEEKDAYS[day.getDay()],
+    dayLabel: `${day.getDate()} ${MONTHS[day.getMonth()]} ${day.getFullYear()}`,
     blank: {
       title: isToday ? "Today's page is still blank" : 'This page is still blank',
       hint: 'Add a photo, a word or a little story.',

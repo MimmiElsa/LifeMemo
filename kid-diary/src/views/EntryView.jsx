@@ -155,7 +155,10 @@ export function EntryView({ actions, labels, model, side, turn, ui }) {
   return (
     <div className={`entry-page entry-page--${side}`} onClick={() => actions.selectScrap(model.date, null)}>
       <header className="entry-header">
-        <h2>{model.dateLabel}</h2>
+        <div className="entry-date">
+          <span className="entry-weekday">{model.weekdayLabel}</span>
+          <h2>{model.dayLabel}</h2>
+        </div>
         <button
           aria-pressed={ui.editing}
           className={`entry-edit-button${ui.editing ? ' is-active' : ''}`}
@@ -165,12 +168,13 @@ export function EntryView({ actions, labels, model, side, turn, ui }) {
           }}
           type="button"
         >
-          <NavIcon name="pencil" size={14} />
+          <NavIcon name="pencil" size={16} />
           {labels.editEntry}
         </button>
       </header>
 
-      {model.isEmpty && (
+      {/* the "still blank" note is hidden while the page is being edited, and comes back if nothing was added */}
+      {model.isEmpty && !ui.editing && (
         <div className="entry-blank">
           <img alt="" aria-hidden="true" className="entry-blank-friend" src={blankFriend} />
           <h3>{model.blank.title}</h3>

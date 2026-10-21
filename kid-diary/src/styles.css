@@ -1936,10 +1936,13 @@ button {
   display: flex;
   flex-direction: column;
   gap: 22px;
+  /* fills the page, so the menu of a tapped scrap has room to show under it */
+  flex: 1;
   min-height: 0;
   /* room on the left for the up/down buttons, which sit outside the scraps */
   margin-left: -30px;
-  padding: 8px 4px 8px 34px;
+  /* room at the bottom for the menu of the last scrap */
+  padding: 8px 4px 96px 34px;
   overflow-y: auto;
   scrollbar-width: none;
 }
@@ -3167,4 +3170,39 @@ button {
 /* a scrap with several lines keeps them (the answers of a template) */
 .scrap p {
   white-space: pre-line;
+}
+
+/* The header of an entry: the date on two rows, and an airy "Edit entry" button with room around it */
+.entry-header {
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.entry-date {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.entry-weekday {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #8a7f6a;
+}
+
+.entry-header h2 {
+  margin: 2px 0 0;
+  font-size: 28px;
+  line-height: 1.05;
+}
+
+.entry-edit-button {
+  gap: 8px;
+  padding: 11px 20px;
+  border-radius: 24px;
+  font-size: 14px;
 }
