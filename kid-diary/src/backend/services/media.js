@@ -1,15 +1,17 @@
 // Issue #10 - Upload picture/media
+//
+// A photo or video belongs to a scrap (one item on a day's page).
 
 import { createId } from '../utils/ids.js'
 import { get, put, remove } from '../store.js'
 
-function createMedia({ entryId, kind, file }) {
-	if (!entryId) throw new Error('Media needs an entryId')
+function createMedia({ scrapId, kind, file }) {
+	if (!scrapId) throw new Error('Media needs a scrapId')
 	if (!file) throw new Error('Media needs a file')
 
 	return {
 		id: createId(),
-		entryId,
+		scrapId,
 		kind,
 		file,
 		name: file.name ?? `${kind}-${Date.now()}`,
@@ -18,14 +20,14 @@ function createMedia({ entryId, kind, file }) {
 	}
 }
 
-export async function savePhoto({ entryId, file }) {
-	const photo = createMedia({ entryId, kind: 'photo', file })
+export async function savePhoto({ scrapId, file }) {
+	const photo = createMedia({ scrapId, kind: 'photo', file })
 	await put('media', photo)
 	return photo
 }
 
-export async function saveVideo({ entryId, file }) {
-	const video = createMedia({ entryId, kind: 'video', file })
+export async function saveVideo({ scrapId, file }) {
+	const video = createMedia({ scrapId, kind: 'video', file })
 	await put('media', video)
 	return video
 }

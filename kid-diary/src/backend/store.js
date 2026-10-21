@@ -13,6 +13,7 @@
 const tables = {
   children: new Map(),
   entries: new Map(),
+  scraps: new Map(),
   media: new Map(),
   milestones: new Map(),
   settings: new Map(),

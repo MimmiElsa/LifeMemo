@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import {
-  addEntry,
-  attachMediaToEntry,
+  addScrap,
+  attachMediaToScrap,
   deletePhoto,
   deleteVideo,
   recordPhoto,
@@ -9,15 +9,20 @@ import {
   savePhoto,
   saveVideo,
 } from './backend/index.js'
+import { toDayKey } from './backend/utils/dates.js'
 import { getNavigationItems, presentSideNavigation } from './presenters/appPresenter.js'
 import { presentStartPage } from './presenters/startPagePresenter.js'
 import { presentFolderPicker } from './presenters/folderPickerPresenter.js'
+import { presentMilestones } from './presenters/milestonesPresenter.js'
 import { presentNewMemory } from './presenters/newMemoryPresenter.js'
 import { presentScrapbook } from './presenters/scrapbookPresenter.js'
 import { presentWelcome } from './presenters/welcomePresenter.js'
+import { createSampleMilestones, LUCAS_BIRTHDAY } from './backend/sampleMilestones.js'
 import { AppShell } from './views/AppShell.jsx'
 import { FolderPickerView } from './views/FolderPickerView.jsx'
+import { MilestonesView } from './views/MilestonesView.jsx'
 import { NewMemoryView } from './views/NewMemoryView.jsx'
+import { PlaceholderPageView } from './views/PlaceholderPageView.jsx'
 import { ScrapbookView } from './views/ScrapbookView.jsx'
 import { StartPageView } from './views/StartPageView.jsx'
 import { WelcomeView } from './views/WelcomeView.jsx'
@@ -25,7 +30,14 @@ import { WelcomeView } from './views/WelcomeView.jsx'
 function App() {
   const navigationItems = getNavigationItems()
   const [stage, setStage] = useState('welcome')
-  const [children, setChildren] = useState([{ id: 'child-lucas', name: 'Lucas' }])
+  const [children, setChildren] = useState([
+    {
+      id: 'child-lucas',
+      name: 'Lucas',
+      birthday: LUCAS_BIRTHDAY,
+      milestones: createSampleMilestones('child-lucas').milestones,
+    },
+  ])
   const [activeChildId, setActiveChildId] = useState(null)
   const [activeRoute, setActiveRoute] = useState('home')
   const [memories, setMemories] = useState([])
@@ -36,11 +48,12 @@ function App() {
 
   async function addMedia(file, kind) {
     if (!file || !activeChildId) return
-    const entry = await addEntry({ childId: activeChildId })
+    // each upload becomes a scrap on today's page for this child
+    const scrap = await addScrap({ childId: activeChildId, date: toDayKey(), kind: 'memory' })
     const media = kind === 'photo'
-      ? await savePhoto({ entryId: entry.id, file })
-      : await saveVideo({ entryId: entry.id, file })
-    await attachMediaToEntry(entry.id, media.id)
+      ? await savePhoto({ scrapId: scrap.id, file })
+      : await saveVideo({ scrapId: scrap.id, file })
+    await attachMediaToScrap(scrap.id, media.id)
     setMemories((current) => [...current, { ...media, url: URL.createObjectURL(file) }])
     setStatus(`${kind === 'photo' ? 'Photo' : 'Video'} added.`)
   }
@@ -118,7 +131,7 @@ function App() {
           setStage('app')
         }}
         onAddFolder={(name) =>
-          setChildren((current) => [...current, { id: crypto.randomUUID(), name }])
+          setChildren((current) => [...current, { id: crypto.randomUUID(), name, birthday: null, milestones: [] }])
         }
         onBack={() => setStage('welcome')}
       />
@@ -128,13 +141,16 @@ function App() {
   const activeChild = children.find((c) => c.id === activeChildId)
   const activeItem = navigationItems.find((item) => item.id === activeRoute)
   const pageTitle = activeRoute === 'newMemory' ? 'New Memory' : activeItem?.label ?? 'Page'
-  const page = activeRoute === 'home'
-    ? <StartPageView model={presentStartPage({ child: activeChild })} />
-    : activeRoute === 'newMemory'
-      ? renderNewMemory()
-      : activeRoute === 'scrapbook'
-        ? renderScrapbook()
-        : <section><h1>{pageTitle}</h1></section>
+  let page = <PlaceholderPageView title={pageTitle} />
+  if (activeRoute === 'home') {
+    page = <StartPageView model={presentStartPage({ child: activeChild })} />
+  } else if (activeRoute === 'milestones') {
+    page = <MilestonesView model={presentMilestones({ child: activeChild })} />
+  } else if (activeRoute === 'newMemory') {
+    page = renderNewMemory()
+  } else if (activeRoute === 'scrapbook') {
+    page = renderScrapbook()
+  }
 
   return (
     <AppShell
