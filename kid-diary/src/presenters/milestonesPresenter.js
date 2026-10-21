@@ -74,6 +74,8 @@ export function presentMilestones({ child = null, today = new Date() } = {}) {
       type: 'block',
       id: milestone.id,
       title: milestone.title,
+      date: milestone.date,
+      scrapId: milestone.scrapId ?? null,
       dateLabel: formatDate(date),
       ageLabel: ageLabel(child?.birthday, date, now),
       isUpcoming,

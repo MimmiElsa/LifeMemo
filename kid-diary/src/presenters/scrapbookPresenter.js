@@ -43,6 +43,7 @@ export function presentScrapbook({ child = null } = {}) {
     pageTitle: child ? `${child.name}’s family book` : 'Your family book',
     decorateLabel: 'Decorate cover',
     summaryLabel: 'Summary',
+    closeBookLabel: 'Close book',
 
     cover: {
       color: scrapbook?.coverColor ?? '#7FAEE6',

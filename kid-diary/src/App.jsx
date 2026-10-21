@@ -12,20 +12,20 @@ import {
 import { LUCAS_DEMO, seedDemoData } from './backend/demoData.js'
 import { toDayKey } from './backend/utils/dates.js'
 import { useCalendar } from './hooks/useCalendar.js'
+import { useEntryDay } from './hooks/useEntryDay.js'
 import { getNavigationItems, presentSideNavigation } from './presenters/appPresenter.js'
 import { presentStartPage } from './presenters/startPagePresenter.js'
 import { presentCalendar } from './presenters/calendarPresenter.js'
 import { presentFolderPicker } from './presenters/folderPickerPresenter.js'
 import { presentMilestones } from './presenters/milestonesPresenter.js'
 import { presentNewMemory } from './presenters/newMemoryPresenter.js'
-import { presentMemories } from './presenters/memoriesPresenter.js'
+import { presentEntry } from './presenters/entryPresenter.js'
 import { presentScrapbook } from './presenters/scrapbookPresenter.js'
 import { presentWelcome } from './presenters/welcomePresenter.js'
 import { createScrapbook } from './backend/models.js'
 import { AppShell } from './views/AppShell.jsx'
 import { CalendarView } from './views/CalendarView.jsx'
 import { FolderPickerView } from './views/FolderPickerView.jsx'
-import { MemoriesView } from './views/MemoriesView.jsx'
 import { MilestonesView } from './views/MilestonesView.jsx'
 import { NewMemoryView } from './views/NewMemoryView.jsx'
 import { PlaceholderPageView } from './views/PlaceholderPageView.jsx'
@@ -39,13 +39,19 @@ function App() {
   const [children, setChildren] = useState([LUCAS_DEMO])
   const [activeChildId, setActiveChildId] = useState(null)
   const [activeRoute, setActiveRoute] = useState('home')
-  const [memories, setMemories] = useState([])
-  const [scrapbookOpen, setScrapbookOpen] = useState(false)
+  const [scraps, setScraps] = useState([])
+  const [scrapbookInitiallyOpen, setScrapbookInitiallyOpen] = useState(false)
+  // which day's entry the scrapbook shows, and the scrap to point out on it
+  const [entryDate, setEntryDate] = useState(() => toDayKey())
+  const [highlightScrapId, setHighlightScrapId] = useState(null)
+  // a page turn in progress: { date, direction: 'next' | 'previous', details, neighbours }
+  const [turn, setTurn] = useState(null)
   const [status, setStatus] = useState('')
   const [busy, setBusy] = useState(false)
   const [recording, setRecording] = useState(false)
   const videoStopRef = useRef(null)
   const calendar = useCalendar(activeChildId, activeRoute === 'calendar')
+  const entryDay = useEntryDay(activeChildId, entryDate, activeRoute === 'scrapbook', scraps.length)
 
   // put Lucas's demo days in the store, so the calendar has something to show
   useEffect(() => {
@@ -60,7 +66,7 @@ function App() {
       ? await savePhoto({ scrapId: scrap.id, file })
       : await saveVideo({ scrapId: scrap.id, file })
     await attachMediaToScrap(scrap.id, media.id)
-    setMemories((current) => [...current, { ...media, url: URL.createObjectURL(file) }])
+    setScraps((current) => [...current, { ...media, url: URL.createObjectURL(file) }])
     setStatus(`${kind === 'photo' ? 'Photo' : 'Video'} added.`)
   }
 
@@ -111,29 +117,65 @@ function App() {
         onOpenSummary={() => {}}
         onPreviousMonth={calendar.showPreviousMonth}
         onSelectDate={calendar.selectDate}
-        onViewEntry={() => {
-          setScrapbookOpen(true)
-          setActiveRoute('scrapbook')
-        }}
+        onViewEntry={(date, scrapId = null) => openEntry(date, scrapId)}
       />
     )
   }
 
-  // The scrapbook opens on its cover; "Open me!" turns to the pages (photos and videos)
+  // Show a day's entry in the scrapbook, with the book already open (and a scrap pointed out)
+  function openEntry(date, scrapId = null) {
+    setTurn(null)
+    setEntryDate(date)
+    setHighlightScrapId(scrapId)
+    setScrapbookInitiallyOpen(true)
+    setActiveRoute('scrapbook')
+  }
+
+  // The scrapbook opens on its cover. Opening the book shows the day's entry as facing pages,
+  // on the same screen, so browsing never loads another page.
+  // The model for one day's entry (the two facing pages)
+  function buildEntryModel(date, page, loaded) {
+    return presentEntry({
+      date,
+      storedScraps: page.details?.scraps ?? [],
+      neighbours: page.neighbours,
+      uploads: scraps,
+      milestoneScrapIds: (activeChild?.milestones ?? []).map((m) => m.scrapId).filter(Boolean),
+      highlightScrapId,
+      loaded,
+    })
+  }
+
+  // Turning a page: read the page we are turning to first, then show the leaf turning
+  async function turnPage(date) {
+    if (turn) return
+    const page = await entryDay.load(date)
+    setTurn({
+      date,
+      direction: date > entryDate ? 'next' : 'previous',
+      details: page.details,
+      neighbours: page.neighbours,
+    })
+  }
+
+  function completeTurn() {
+    if (!turn) return
+    setEntryDate(turn.date)
+    setHighlightScrapId(null)
+    setTurn(null)
+  }
+
   function renderScrapbook() {
-    if (scrapbookOpen) {
-      return (
-        <MemoriesView
-          model={presentMemories({ memories })}
-          onBack={() => setScrapbookOpen(false)}
-          onDelete={deleteMedia}
-        />
-      )
-    }
     return (
       <ScrapbookView
+        entryModel={buildEntryModel(entryDate, entryDay, entryDay.loaded)}
+        initiallyOpen={scrapbookInitiallyOpen}
         model={presentScrapbook({ child: activeChild })}
-        onOpenBook={() => setScrapbookOpen(true)}
+        onAddMemory={() => setActiveRoute('newMemory')}
+        onDeleteScrap={deleteScrap}
+        onTurnComplete={completeTurn}
+        onTurnPage={turnPage}
+        turn={turn && { direction: turn.direction, model: buildEntryModel(turn.date, turn, true) }}
       />
     )
   }
@@ -159,11 +201,11 @@ function App() {
     await addMedia(file, kind)
   }
 
-  async function deleteMedia(memory) {
-    if (memory.kind === 'photo') await deletePhoto(memory.id)
-    else await deleteVideo(memory.id)
-    URL.revokeObjectURL(memory.url)
-    setMemories((current) => current.filter((item) => item.id !== memory.id))
+  async function deleteScrap(scrap) {
+    if (scrap.kind === 'photo') await deletePhoto(scrap.id)
+    else await deleteVideo(scrap.id)
+    URL.revokeObjectURL(scrap.url)
+    setScraps((current) => current.filter((item) => item.id !== scrap.id))
   }
 
   if (stage === 'welcome') {
@@ -196,7 +238,12 @@ function App() {
   if (activeRoute === 'home') {
     page = <StartPageView model={presentStartPage({ child: activeChild })} />
   } else if (activeRoute === 'milestones') {
-    page = <MilestonesView model={presentMilestones({ child: activeChild })} />
+    page = (
+      <MilestonesView
+        model={presentMilestones({ child: activeChild })}
+        onOpenMilestone={(block) => openEntry(block.date, block.scrapId)}
+      />
+    )
   } else if (activeRoute === 'newMemory') {
     page = renderNewMemory()
   } else if (activeRoute === 'scrapbook') {
@@ -211,7 +258,12 @@ function App() {
       navigationItems={navigationItems}
       navigationModel={presentSideNavigation({ child: activeChild })}
       onNavigate={(route) => {
-        if (route === 'scrapbook') setScrapbookOpen(false)
+        if (route === 'scrapbook') {
+          setTurn(null)
+          setScrapbookInitiallyOpen(false)
+          setEntryDate(toDayKey())
+          setHighlightScrapId(null)
+        }
         setActiveRoute(route)
       }}
       onNewMemory={() => setActiveRoute('newMemory')}

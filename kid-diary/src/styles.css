@@ -1740,3 +1740,421 @@ button {
   from { opacity: 0; transform: translateY(12px) scale(0.96); }
   to { opacity: 1; transform: none; }
 }
+
+
+/* ====== Opening the book ====== */
+/* Closed: the cover sits on the left. Open: the book slides to the right, then the cover
+   turns on its spine (left edge) to reveal two facing pages. Closing plays it in reverse. */
+.scrapbook-body {
+  position: relative;
+}
+
+.book {
+  z-index: 2;
+  perspective: 2400px;
+  transform-origin: 0 0;
+  transition: transform 0.8s cubic-bezier(0.5, 0, 0.2, 1) 0.55s;
+}
+
+/* The spread is two pages of 450px = 900px. The space is 22px narrower, so the body
+   grows 11px on each side while open (no scaling, which would blur the text). */
+.scrapbook-body {
+  transition: margin-inline 0.8s cubic-bezier(0.5, 0, 0.2, 1) 0.55s;
+}
+
+.scrapbook-body.is-open {
+  margin-inline: -11px;
+  transition-delay: 0s;
+}
+
+.scrapbook-body.is-open .book {
+  transform: translateX(450px);
+  transition-delay: 0s;
+}
+
+/* Once the book has finished opening, draw it flat: no 3D, no perspective, whole pixels.
+   3D layers are drawn as a picture that gets stretched, which makes the text blurry. */
+.scrapbook-body.is-settled .book {
+  perspective: none;
+}
+
+.scrapbook-body.is-open.is-settled .book-flipper {
+  transform: translateX(-450px);
+  transform-style: flat;
+  transition: none;
+}
+
+.scrapbook-body.is-settled .book-face--front {
+  visibility: hidden;
+}
+
+.scrapbook-body.is-open.is-settled .book-face--back {
+  transform: none;
+}
+
+/* the moment before closing: same picture as when settled, but in 3D again */
+.scrapbook-body.is-open.is-unsettling .book-flipper {
+  transition: none;
+}
+
+.book-flipper {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  transition: transform 1s ease-in-out;
+}
+
+.scrapbook-body.is-open .book-flipper {
+  transform: rotateY(-180deg);
+  transition-delay: 0.45s;
+}
+
+.book-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* the inside of the cover is the left-hand page */
+.book-face--back {
+  transform: rotateY(180deg);
+  border-radius: 24px 10px 10px 24px;
+  background: repeating-linear-gradient(to bottom, #fffdf7 0 26px, #ede5d6 26px 27px);
+  box-shadow: 0 14px 30px rgba(60, 40, 10, 0.12);
+}
+
+.book-page-face--right {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 10px 24px 24px 10px;
+}
+
+.scrapbook-side {
+  transition: opacity 0.35s ease;
+}
+
+.scrapbook-body.is-open .scrapbook-side {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* --- Entry pages (scraps on a day's page) --- */
+.entry-page {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-sizing: border-box;
+  padding: 38px 30px 30px 40px;
+  color: #141a26;
+}
+
+.entry-page--left {
+  padding: 38px 44px 30px 34px;
+}
+
+.entry-page--right {
+  padding: 38px 40px 30px 48px;
+}
+
+/* shading where the two pages meet in the middle */
+.entry-page--left::after,
+.entry-page--right::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 34px;
+  pointer-events: none;
+}
+
+.entry-page--left::after {
+  right: 0;
+  background: linear-gradient(to right, rgba(60, 40, 10, 0), rgba(60, 40, 10, 0.14));
+}
+
+.entry-page--right::before {
+  left: 0;
+  background: linear-gradient(to left, rgba(60, 40, 10, 0), rgba(60, 40, 10, 0.14));
+}
+
+.entry-header h2 {
+  margin: 0;
+  font-family: Fredoka, sans-serif;
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.entry-blank {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 40px;
+  text-align: center;
+}
+
+.entry-blank-friend {
+  width: 130px;
+  margin-bottom: 18px;
+}
+
+.entry-blank h3 {
+  margin: 0 0 6px;
+  font-family: Fredoka, sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.entry-blank p {
+  margin: 0 0 22px;
+  font-size: 13px;
+  color: #5b6577;
+}
+
+.entry-blank-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 46px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 23px;
+  background: #b9d7f5;
+  font: 600 14px Fredoka, sans-serif;
+  color: #141a26;
+  cursor: pointer;
+}
+
+.entry-scraps {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-height: 0;
+  padding: 8px 4px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.entry-scraps::-webkit-scrollbar {
+  display: none;
+}
+
+.scrap {
+  flex-shrink: 0;
+  padding: 8px 8px 0;
+  background: #fff;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.18);
+  transform: rotate(-1.5deg);
+}
+
+.scrap:nth-child(even) {
+  transform: rotate(1.2deg);
+}
+
+.scrap img,
+.scrap video {
+  display: block;
+  width: 100%;
+  max-height: 210px;
+  object-fit: cover;
+}
+
+.scrap-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 2px 8px;
+}
+
+.scrap-name {
+  overflow: hidden;
+  font-family: Caveat, cursive;
+  font-size: 20px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #2e2a26;
+}
+
+.scrap-delete {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border: 1.5px solid #d9d1c3;
+  border-radius: 12px;
+  background: #fff;
+  font: 600 11px Inter, sans-serif;
+  color: #5b6577;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .book,
+  .book-flipper,
+  .scrapbook-side {
+    transition-duration: 0.01s;
+    transition-delay: 0s;
+  }
+}
+
+/* Text scraps (a written memory, activity or interaction on a day's page) */
+.scrap--text {
+  padding: 12px 14px 14px;
+  transform: rotate(-0.8deg);
+}
+
+.scrap--text:nth-child(even) {
+  transform: rotate(0.8deg);
+}
+
+.scrap-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: #8a7f6a;
+}
+
+.scrap--text p {
+  margin: 0;
+  font-family: Caveat, cursive;
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.15;
+  color: #2e2a26;
+}
+
+/* a scrap that a milestone marks, and the one we arrived at */
+.scrap--milestone {
+  background: #fff8dc;
+}
+
+.scrap--milestone .scrap-label {
+  color: #b07a00;
+}
+
+.scrap--highlight {
+  outline: 3px solid #f4b73d;
+  outline-offset: 2px;
+}
+
+/* Page-turning corners: a still, folded corner at the bottom of each page */
+.page-turner {
+  position: absolute;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  width: 72px;
+  height: 72px;
+  padding: 0 14px 12px;
+  border: 0;
+  background: transparent;
+  color: #6b5f48;
+  cursor: pointer;
+}
+
+.page-turner--previous {
+  left: 0;
+  justify-content: flex-start;
+}
+
+.page-turner--next {
+  right: 0;
+  justify-content: flex-end;
+}
+
+/* the folded-over corner of the paper */
+.page-turner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  filter: drop-shadow(0 -2px 3px rgba(60, 40, 10, 0.18));
+}
+
+.page-turner--next::before {
+  background: linear-gradient(135deg, #f6efde 0%, #e3d7bd 100%);
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+}
+
+.page-turner--previous::before {
+  background: linear-gradient(225deg, #f6efde 0%, #e3d7bd 100%);
+  clip-path: polygon(0 0, 100% 100%, 0 100%);
+}
+
+/* ====== Turning a page ====== */
+/* The leaf hinges on the spine: turning forward, the right page flips over to the left;
+   turning back, the left page flips over to the right. Its back shows the new page. */
+.scrapbook-body.is-open.is-turning .book {
+  perspective: 2400px;
+}
+
+.book-leaf {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 3;
+  width: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.9s ease-in-out;
+}
+
+.book-leaf--next {
+  left: 0;
+  transform-origin: left center;
+}
+
+.book-leaf--next.is-flipped {
+  transform: rotateY(-180deg);
+}
+
+.book-leaf--previous {
+  left: -100%;
+  transform-origin: right center;
+}
+
+.book-leaf--previous.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.leaf-face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  background: repeating-linear-gradient(to bottom, #fffdf7 0 26px, #ede5d6 26px 27px);
+  box-shadow: 0 10px 24px rgba(60, 40, 10, 0.18);
+}
+
+.book-leaf--next .leaf-face--front,
+.book-leaf--previous .leaf-face--back {
+  border-radius: 10px 24px 24px 10px;
+}
+
+.book-leaf--next .leaf-face--back,
+.book-leaf--previous .leaf-face--front {
+  border-radius: 24px 10px 10px 24px;
+}
+
+.leaf-face--back {
+  transform: rotateY(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .book-leaf {
+    transition-duration: 0.01s;
+  }
+}
