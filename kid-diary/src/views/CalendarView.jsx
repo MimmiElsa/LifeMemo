@@ -17,6 +17,7 @@ export function CalendarView({
   onOpenSummary,
   onPreviousMonth,
   onSelectDate,
+  onStartEntry,
   onViewEntry,
 }) {
   const { day } = model
@@ -100,7 +101,20 @@ export function CalendarView({
                     ))}
                   </ul>
                 ) : (
-                  <p className="day-card-empty">{day.emptyLabel}</p>
+                  <div className="day-card-empty-state">
+                    <p className="day-card-empty">{day.emptyLabel}</p>
+                    {day.canStartEntry ? (
+                      <>
+                        <p className="day-card-hint">{day.startEntryHint}</p>
+                        <button className="start-entry-button" onClick={() => onStartEntry(day.date)} type="button">
+                          <NavIcon name="plus" size={16} />
+                          {day.startEntryLabel}
+                        </button>
+                      </>
+                    ) : (
+                      <p className="day-card-hint">{day.futureLabel}</p>
+                    )}
+                  </div>
                 )}
 
                 {day.hasEntry && (

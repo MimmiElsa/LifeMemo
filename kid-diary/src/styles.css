@@ -1936,8 +1936,13 @@ button {
   display: flex;
   flex-direction: column;
   gap: 22px;
+  /* fills the page, so the menu of a tapped scrap has room to show under it */
+  flex: 1;
   min-height: 0;
-  padding: 8px 4px;
+  /* room on the left for the up/down buttons, which sit outside the scraps */
+  margin-left: -30px;
+  /* room at the bottom for the menu of the last scrap */
+  padding: 8px 4px 96px 34px;
   overflow-y: auto;
   scrollbar-width: none;
 }
@@ -1964,90 +1969,6 @@ button {
   width: 100%;
   max-height: 210px;
   object-fit: cover;
-}
-
-.scrap-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 6px 2px 8px;
-}
-
-.scrap-name {
-  overflow: hidden;
-  font-family: Caveat, cursive;
-  font-size: 20px;
-  font-weight: 700;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: #2e2a26;
-}
-
-.scrap-delete {
-  flex-shrink: 0;
-  padding: 4px 10px;
-  border: 1.5px solid #d9d1c3;
-  border-radius: 12px;
-  background: #fff;
-  font: 600 11px Inter, sans-serif;
-  color: #5b6577;
-  cursor: pointer;
-}
-
-.memory-page > p {
-  margin: 8px 0 24px;
-  color: #626b75;
-}
-
-.memory-actions {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(150px, 1fr));
-  gap: 12px;
-  max-width: 760px;
-}
-
-.memory-action {
-  min-height: 52px;
-  padding: 12px 16px;
-  border: 1px solid transparent;
-  border-radius: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
-}
-
-.memory-action:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(45, 57, 70, 0.12);
-}
-
-.memory-action:focus-visible {
-  outline: 3px solid #9fc5ff;
-  outline-offset: 2px;
-}
-
-.memory-action:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-.memory-action--add {
-  background: #edf4ff;
-  border-color: #c7ddfb;
-  color: #315f98;
-}
-
-.memory-action--record {
-  background: #fff0f0;
-  border-color: #f3cccc;
-  color: #a44343;
-}
-
-@media (max-width: 700px) {
-  .memory-actions {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2497,3 +2418,883 @@ button {
   font-size: 14px;
   color: #5b6577;
 }
+
+/* ====== Editing a page: tapping scraps, the edit button, stickers ====== */
+.scrap-slot {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.scrap {
+  cursor: pointer;
+  transition: outline-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* the tilt now belongs to the slot, because each scrap sits in its own slot */
+.scrap-slot:nth-child(even) > .scrap {
+  transform: rotate(1.2deg);
+}
+
+.scrap-slot:nth-child(even) > .scrap--text {
+  transform: rotate(0.8deg);
+}
+
+/* a photo or video scrap: a polaroid with its words underneath */
+.scrap--media {
+  padding: 8px 8px 12px;
+}
+
+.scrap--media .scrap-label {
+  margin-top: 8px;
+}
+
+.scrap--media p {
+  margin: 0;
+  font-family: Caveat, cursive;
+  font-size: 22px;
+  line-height: 1.1;
+  color: #2e2a26;
+}
+
+/* the scrap that was tapped: a stroke around it, and its three choices */
+.scrap--selected {
+  outline: 3px solid #3d7be0;
+  outline-offset: 3px;
+}
+
+.scrap-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-top: 10px;
+  padding: 6px;
+  border: 2px solid #3d7be0;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 18px rgba(40, 50, 80, 0.18);
+}
+
+.scrap-menu-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  font: 600 12px Inter, sans-serif;
+  color: #141a26;
+  cursor: pointer;
+}
+
+.scrap-menu-button:hover {
+  background: #eef4ff;
+}
+
+.scrap-menu-button--danger {
+  color: #c2412d;
+}
+
+.scrap-menu-button--danger:hover {
+  background: #ffeeea;
+}
+
+.scrap-menu-question {
+  padding: 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #5b6577;
+}
+
+/* move a scrap up or down (while editing) */
+.scrap-mover {
+  position: absolute;
+  top: 50%;
+  left: -28px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transform: translateY(-50%);
+}
+
+.scrap-mover button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1.5px solid #d9d1c3;
+  border-radius: 50%;
+  background: #fff;
+  color: #141a26;
+  cursor: pointer;
+}
+
+.scrap-mover button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* the edit button of a page, and what it brings */
+.entry-header {
+  display: flex;
+  align-items: flex-start;
+}
+
+/* stickers stuck on the open pages (the layer covers both pages) */
+.sticker-layer {
+  position: absolute;
+  top: 0;
+  left: -450px;
+  z-index: 4;
+  width: 900px;
+  height: 100%;
+  pointer-events: none;
+}
+
+.page-sticker {
+  position: absolute;
+  touch-action: none;
+  user-select: none;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2));
+}
+
+.page-sticker--editing {
+  cursor: grab;
+  pointer-events: auto;
+  border-radius: 14px;
+  outline: 2px dashed #3d7be0;
+  outline-offset: 4px;
+}
+
+.page-sticker.is-dragging {
+  z-index: 5;
+  cursor: grabbing;
+}
+
+.page-sticker-remove {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #141a26;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* forms in a popup (add or edit a scrap, a milestone, a sticker) */
+.form-modal {
+  align-items: stretch;
+  width: 480px;
+  text-align: left;
+}
+
+.form-modal h2 {
+  margin: 0 0 14px;
+  padding-right: 40px;
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #3a4356;
+}
+
+.modal-field input[type='text'],
+.modal-field textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #d9d1c3;
+  border-radius: 12px;
+  background: #fff;
+  font: 400 15px Inter, sans-serif;
+  color: #141a26;
+  resize: none;
+}
+
+.modal-field input[type='file'] {
+  font: 400 13px Inter, sans-serif;
+}
+
+.modal-chips {
+  display: flex;
+  gap: 8px;
+}
+
+.modal-chip {
+  padding: 8px 14px;
+  border: 1.5px solid #d9d1c3;
+  border-radius: 18px;
+  background: #fff;
+  font: 600 13px Inter, sans-serif;
+  color: #141a26;
+  cursor: pointer;
+}
+
+.modal-chip.is-selected {
+  border-color: #141a26;
+  background: #141a26;
+  color: #fff;
+}
+
+.modal-colors {
+  display: flex;
+  gap: 10px;
+}
+
+.modal-color {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.5px #d9d1c3;
+  cursor: pointer;
+}
+
+.modal-color.is-selected {
+  box-shadow: 0 0 0 3px #141a26;
+}
+
+.form-modal .idea-actions {
+  margin-top: 4px;
+}
+
+.form-modal .dark-pill-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.sticker-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+.sticker-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 4px 8px;
+  border: 1.5px solid #ece5d6;
+  border-radius: 14px;
+  background: #fff;
+  font: 600 11px Inter, sans-serif;
+  color: #3a4356;
+  cursor: pointer;
+}
+
+.sticker-choice:hover {
+  border-color: #3d7be0;
+  background: #eef4ff;
+}
+
+/* The edit bar: floats just under the book, half over its bottom edge, so it takes no room on the pages */
+.edit-bar {
+  position: absolute;
+  top: calc(100% - 20px);
+  left: -450px;
+  z-index: 6;
+  display: flex;
+  justify-content: center;
+  width: 900px;
+  pointer-events: none;
+}
+
+/* ====== Each page of the book is its own entry ====== */
+/* room at the bottom of every page for the edit bar, so it never covers a scrap */
+.entry-page {
+  padding-bottom: 76px;
+}
+
+.entry-header {
+  align-items: center;
+}
+
+.entry-header h2 {
+  font-size: 22px;
+}
+
+/* the edit button of one entry */
+.entry-edit-button {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 1.5px solid #d9d1c3;
+  border-radius: 16px;
+  background: #fff;
+  font: 600 12px Inter, sans-serif;
+  color: #141a26;
+  cursor: pointer;
+}
+
+.entry-edit-button.is-active {
+  border-color: #141a26;
+  background: #141a26;
+  color: #fff;
+}
+
+/* the stickers of one page sit on top of it */
+.sticker-layer {
+  inset: 0;
+  left: 0;
+  z-index: 2;
+  width: auto;
+  height: auto;
+}
+
+/* the edit bar: tools with a coloured tile and a name under it, floating under the book */
+.edit-bar {
+  top: calc(100% - 58px);
+}
+
+.edit-bar-tools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  pointer-events: auto;
+  padding: 8px 14px;
+  border-radius: 30px;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(20, 26, 38, 0.22);
+}
+
+.edit-tool {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 68px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.edit-tool:hover:not(:disabled) {
+  background: #eef0f4;
+}
+
+.edit-tool:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.edit-tool-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 36px;
+  border-radius: 12px;
+  color: #141a26;
+}
+
+.edit-tool-tile--text { background: #e6edf5; }
+.edit-tool-tile--stickers { background: #fff0c2; }
+.edit-tool-tile--photo { background: #ffe3dc; }
+.edit-tool-tile--audio { background: #ffe0f2; }
+
+.edit-tool-name {
+  font: 700 12px Inter, sans-serif;
+  color: #141a26;
+}
+
+.edit-bar-divider {
+  width: 1px;
+  height: 40px;
+  margin: 0 8px;
+  background: #e5e0d4;
+}
+
+.edit-bar-done {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 20px;
+  background: #141a26;
+  font: 600 13px Inter, sans-serif;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* An empty day on the calendar: start an entry for it */
+.day-card-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.day-card-hint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #7b8494;
+}
+
+.start-entry-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 11px 18px;
+  border: 0;
+  border-radius: 22px;
+  background: #b9d7f5;
+  font: 600 14px Fredoka, sans-serif;
+  color: #141a26;
+  cursor: pointer;
+}
+
+.start-entry-button:hover {
+  background: #a5caf0;
+}
+
+/* ====== New memory: the choice and the questions of a template ====== */
+.new-memory-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  box-sizing: border-box;
+  padding: 18px 28px 28px;
+  overflow-y: auto;
+  background: #f7f9fc;
+  font-family: Inter, system-ui, sans-serif;
+  color: #141a26;
+}
+
+.new-memory-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+}
+
+.new-memory-close {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1.5px solid #e1e5ec;
+  border-radius: 50%;
+  background: #fff;
+  color: #141a26;
+  cursor: pointer;
+}
+
+.new-memory-bar-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.new-memory-heading h1 {
+  margin: 0;
+  font-family: Fredoka, sans-serif;
+  font-size: 40px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.new-memory-heading p {
+  margin: 6px 0 0;
+  font-size: 15px;
+  color: #5b6577;
+}
+
+.new-memory-choices {
+  display: flex;
+  flex: 1;
+  gap: 18px;
+  min-height: 0;
+}
+
+.blank-card {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 30px 32px;
+  border: 1.5px solid #e1e5ec;
+  border-radius: 28px;
+  background: #fff;
+}
+
+.blank-card h2 {
+  margin: 0;
+  font-family: Fredoka, sans-serif;
+  font-size: 30px;
+  font-weight: 600;
+}
+
+.blank-card p {
+  margin: 8px 0 22px;
+  font-size: 15px;
+  color: #5b6577;
+}
+
+.blank-card-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 52px;
+  padding: 0 26px;
+  border: 0;
+  border-radius: 26px;
+  background: #141a26;
+  font: 600 15px Inter, sans-serif;
+  color: #fff;
+  cursor: pointer;
+}
+
+.blank-card-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.template-grid {
+  display: grid;
+  flex: 1;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 18px;
+}
+
+.template-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 26px 26px 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 28px;
+  background: var(--template-color);
+  text-align: left;
+  color: #141a26;
+  cursor: pointer;
+}
+
+.template-card:hover {
+  filter: brightness(0.98);
+  transform: translateY(-2px);
+}
+
+.template-card-title {
+  font-family: Fredoka, sans-serif;
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.template-card-hint {
+  margin-top: 4px;
+  font-size: 14px;
+  color: #5b6577;
+}
+
+.template-sticker {
+  position: absolute;
+  width: 110px;
+  pointer-events: none;
+}
+
+.template-sticker--activity { right: 8px; bottom: 6px; }
+.template-sticker--moment { right: 0; bottom: 0; }
+.template-sticker--conversation { left: 0; bottom: 0; }
+.template-sticker--milestone { right: 0; bottom: 0; }
+
+/* the questions of a template */
+.answer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 760px;
+}
+
+.answer-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 22px 18px;
+  border-radius: 20px;
+  background: var(--template-color);
+}
+
+.answer-card--short,
+.answer-card--long,
+.answer-card--topic {
+  background: #fff;
+  box-shadow: 0 0 0 1.5px #e1e5ec;
+}
+
+.answer-card--topic {
+  background: var(--template-color);
+  box-shadow: none;
+}
+
+.answer-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #4a5468;
+}
+
+.answer-card input[type='text'],
+.answer-card textarea {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: 400 22px Inter, sans-serif;
+  color: #141a26;
+  resize: none;
+}
+
+.answer-card input::placeholder,
+.answer-card textarea::placeholder {
+  color: #9aa3b2;
+}
+
+.answer-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.answer-suggestion {
+  padding: 7px 14px;
+  border: 1.5px solid rgba(20, 26, 38, 0.15);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.7);
+  font: 600 13px Inter, sans-serif;
+  color: #141a26;
+  cursor: pointer;
+}
+
+.answer-suggestion.is-selected {
+  border-color: #141a26;
+  background: #141a26;
+  color: #fff;
+}
+
+.answer-card--photo {
+  background: #fff;
+  box-shadow: 0 0 0 1.5px #e1e5ec;
+}
+
+.answer-photo-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.answer-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 20px;
+  background: #ffe3dc;
+  font: 600 14px Inter, sans-serif;
+  color: #141a26;
+  cursor: pointer;
+}
+
+.answer-photo-chosen {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 15px;
+}
+
+.answer-link {
+  border: 0;
+  background: none;
+  font: 600 13px Inter, sans-serif;
+  text-decoration: underline;
+  color: #5b6577;
+  cursor: pointer;
+}
+
+.answer-error {
+  font-size: 12px;
+  color: #c2412d;
+}
+
+.answer-actions {
+  padding-top: 4px;
+}
+
+/* a scrap with several lines keeps them (the answers of a template) */
+.scrap p {
+  white-space: pre-line;
+}
+
+/* The header of an entry: the date on two rows, and an airy "Edit entry" button with room around it */
+.entry-header {
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.entry-date {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.entry-weekday {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #8a7f6a;
+}
+
+.entry-header h2 {
+  margin: 2px 0 0;
+  font-size: 28px;
+  line-height: 1.05;
+}
+
+.entry-edit-button {
+  gap: 8px;
+  padding: 11px 20px;
+  border-radius: 24px;
+  font-size: 14px;
+}
+
+/* audio on a scrap, and the button while a recording is going */
+.scrap audio {
+  display: block;
+  width: 100%;
+}
+
+.answer-pill--recording {
+  background: #ffd9d9;
+  color: #a02020;
+}
+
+/* ====== Quick memory: the side bar button, its menu, and the dimmed page ====== */
+.quick-memory {
+  position: relative;
+  z-index: 30;
+}
+
+.quick-memory .new-memory-button {
+  width: 100%;
+}
+
+/* open: the button becomes a white "Close" button */
+.new-memory-button.is-open {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #fff;
+  color: #141a26;
+  font-weight: 600;
+  box-shadow: 0 8px 20px rgba(20, 26, 38, 0.22);
+}
+
+.quick-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  background: rgba(20, 26, 38, 0.45);
+}
+
+.quick-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  left: 0;
+  padding: 12px 8px 8px;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 18px 40px rgba(20, 26, 38, 0.28);
+}
+
+.quick-menu-title {
+  padding: 0 10px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #5b6577;
+}
+
+.quick-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  font: 600 14px Inter, sans-serif;
+  text-align: left;
+  color: #141a26;
+  cursor: pointer;
+}
+
+.quick-option:hover {
+  background: #eef0f4;
+}
+
+.quick-option-tile {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+}
+
+.quick-option-tile--photo { background: #ffe3dc; }
+.quick-option-tile--voice { background: #e3f0ff; }
+.quick-option-tile--video { background: #ffe0f2; }
+.quick-option-tile--write { background: #e8f5d8; }

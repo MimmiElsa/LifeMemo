@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { EntryView } from './EntryView.jsx'
+import { MilestoneModal, ScrapFormModal, StickerModal } from './EntryModals.jsx'
 import { NavIcon } from './NavIcon.jsx'
 
 function PolaroidArt({ scene }) {
@@ -79,10 +80,59 @@ function IdeaModal({ idea, labels, onAnother, onClose }) {
   )
 }
 
+// The tools for editing an entry, in a bar that floats just under the book. They sit outside
+// the pages, so opening the bar never moves anything on them. The bar belongs to the one entry
+// that is being edited (the other page of the book is not touched).
+const TOOLS = [
+  { id: 'text', icon: 'text', variant: 'text' },
+  { id: 'stickers', icon: 'smile' },
+  { id: 'photo', icon: 'camera', variant: 'media' },
+  { id: 'audio', icon: 'mic', variant: 'audio' },
+]
+
+function EditBar({ actions, date, labels }) {
+  function pickTool(tool) {
+    if (tool.id === 'stickers') actions.addSticker(date)
+    else actions.addScrap(date, tool.variant)
+  }
+
+  return (
+    <div className="edit-bar">
+      <div className="edit-bar-tools">
+        {TOOLS.map((tool) => (
+          <button
+            className="edit-tool"
+            key={tool.id}
+            onClick={() => pickTool(tool)}
+            type="button"
+          >
+            <span className={`edit-tool-tile edit-tool-tile--${tool.id}`}>
+              <NavIcon name={tool.icon} size={20} />
+            </span>
+            <span className="edit-tool-name">{labels.tools[tool.id]}</span>
+          </button>
+        ))}
+        <span aria-hidden="true" className="edit-bar-divider" />
+        <button className="edit-bar-done" onClick={() => actions.toggleEdit(date)} type="button">
+          <NavIcon name="check" size={16} />
+          {labels.done}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// A first guess for the name of a milestone: the first words of the scrap
+function milestoneTitleFor(scrap) {
+  const words = (scrap.text || scrap.label).trim()
+  const firstSentence = words.split(/[.!?\n]/)[0].trim()
+  return firstSentence.length > 40 ? `${firstSentence.slice(0, 37)}...` : firstSentence
+}
+
 // The leaf that turns when browsing entries. Turning forward, the right page flips over to the left;
 // turning back, the left page flips over to the right. Its front is the page being turned away
 // and its back is the new page on the other side.
-function TurningLeaf({ entryModel, onComplete, onDelete, onTurnPage, turn }) {
+function TurningLeaf({ actions, current, labels, onComplete, turn, uiFor }) {
   const leafRef = useRef(null)
   const [flipped, setFlipped] = useState(false)
 
@@ -98,8 +148,11 @@ function TurningLeaf({ entryModel, onComplete, onDelete, onTurnPage, turn }) {
     if (event.target === event.currentTarget && event.propertyName === 'transform') onComplete()
   }
 
-  const frontPage = turn.direction === 'next' ? 'right' : 'left'
-  const backPage = turn.direction === 'next' ? 'left' : 'right'
+  // Turning forward the right page flips over (its back is the new left page);
+  // turning back the left page flips over (its back is the new right page).
+  const forward = turn.direction === 'next'
+  const front = { model: forward ? current.right : current.left, side: forward ? 'right' : 'left' }
+  const back = { model: forward ? turn.left : turn.right, side: forward ? 'left' : 'right' }
 
   return (
     <div
@@ -108,23 +161,33 @@ function TurningLeaf({ entryModel, onComplete, onDelete, onTurnPage, turn }) {
       ref={leafRef}
     >
       <div className="leaf-face leaf-face--front" inert>
-        <EntryView model={entryModel} onDelete={onDelete} onTurnPage={onTurnPage} page={frontPage} />
+        <EntryView actions={actions} labels={labels} model={front.model} side={front.side} turn={null} ui={uiFor(front.model)} />
       </div>
       <div className="leaf-face leaf-face--back" inert>
-        <EntryView model={turn.model} onDelete={onDelete} onTurnPage={onTurnPage} page={backPage} />
+        <EntryView actions={actions} labels={labels} model={back.model} side={back.side} turn={null} ui={uiFor(back.model)} />
       </div>
     </div>
   )
 }
 
 export function ScrapbookView({
-  entryModel,
+  initialEditDate = null,
   initiallyOpen = false,
   model,
-  onAddMemory,
+  onAddScrap,
+  onAddSticker,
   onDeleteScrap,
+  onMarkMilestone,
+  onMoveScrap,
+  onMoveSticker,
+  onNewMemory,
+  onRemoveSticker,
   onTurnComplete,
   onTurnPage,
+  onUnmarkMilestone,
+  onUpdateScrap,
+  recorder,
+  spread: pages,
   turn = null,
 }) {
   const { cover, spread, ideaPocket } = model
@@ -137,6 +200,47 @@ export function ScrapbookView({
   const [phase, setPhase] = useState(initiallyOpen ? 'open' : 'closed')
   const isOpen = phase !== 'closed'
   const flipperRef = useRef(null)
+
+  // Which scrap is tapped, and which entry is being edited. Each page of the book is its own
+  // entry, so only the entry whose edit button was pressed goes into edit mode.
+  const [selection, setSelection] = useState({ date: null, id: null })
+  const [editDate, setEditDate] = useState(initialEditDate)
+  // the popup that is open: { type: 'scrap' | 'milestone' | 'sticker', date, scrap?, variant? }
+  const [modal, setModal] = useState(null)
+
+  const clearSelection = () => setSelection({ date: null, id: null })
+
+  // what each page needs to know about itself
+  const uiFor = (page) => ({
+    selectedScrapId: page && selection.date === page.date ? selection.id : null,
+    editing: Boolean(page) && editDate === page.date,
+  })
+
+  // everything a tap on a page can do; the pages (EntryView) only call these
+  const actions = {
+    selectScrap: (date, id) => setSelection({ date, id }),
+    toggleEdit: (date) => {
+      setEditDate(editDate === date ? null : date)
+      clearSelection()
+    },
+    addScrap: (date, variant) => setModal({ type: 'scrap', date, variant }),
+    newMemory: (date) => onNewMemory(date),
+    addSticker: (date) => setModal({ type: 'sticker', date }),
+    editScrap: (date, scrap) => setModal({ type: 'scrap', date, scrap }),
+    markMilestone: (date, scrap) => setModal({ type: 'milestone', date, scrap }),
+    unmarkMilestone: (scrap) => {
+      clearSelection()
+      onUnmarkMilestone(scrap)
+    },
+    deleteScrap: (scrap) => {
+      clearSelection()
+      onDeleteScrap(scrap)
+    },
+    moveScrap: (scrap, direction) => onMoveScrap(scrap.id, direction),
+    moveSticker: onMoveSticker,
+    removeSticker: onRemoveSticker,
+    turnPage: (leftDate) => handleTurnPage(leftDate),
+  }
 
   function openBook() {
     setPhase('opening')
@@ -166,13 +270,14 @@ export function ScrapbookView({
   }, [turn, phase, onTurnComplete])
 
   // the corners only work once the book is open and no page is already turning
-  function handleTurnPage(date) {
-    if (phase === 'open' && !turn) onTurnPage(date)
+  function handleTurnPage(leftDate) {
+    if (phase === 'open' && !turn) onTurnPage(leftDate)
   }
 
   // While turning forward the new right page waits under the leaf (backward: the new left page)
-  const leftModel = turn?.direction === 'previous' ? turn.model : entryModel
-  const rightModel = turn?.direction === 'next' ? turn.model : entryModel
+  const leftModel = turn?.direction === 'previous' ? turn.left : pages.left
+  const rightModel = turn?.direction === 'next' ? turn.right : pages.right
+  const { labels } = pages
 
   function handleFlipEnd(event) {
     if (event.target === event.currentTarget && event.propertyName === 'transform') {
@@ -229,7 +334,14 @@ export function ScrapbookView({
           <div className="book-pages-edge" />
           <div className="book-pages" />
           <div className="book-page-face book-page-face--right" inert={!isOpen}>
-            <EntryView model={rightModel} onDelete={onDeleteScrap} onTurnPage={handleTurnPage} page="right" />
+            <EntryView
+              actions={actions}
+              labels={labels}
+              model={rightModel}
+              side="right"
+              turn={pages.turn.next}
+              ui={uiFor(rightModel)}
+            />
           </div>
 
           {/* the cover turns on its spine: front = cover, back = left-hand page */}
@@ -300,11 +412,12 @@ export function ScrapbookView({
             </div>
             <div className="book-face book-face--back" inert={!isOpen}>
               <EntryView
+                actions={actions}
+                labels={labels}
                 model={leftModel}
-                onAddMemory={onAddMemory}
-                onDelete={onDeleteScrap}
-                onTurnPage={handleTurnPage}
-                page="left"
+                side="left"
+                turn={pages.turn.previous}
+                ui={uiFor(leftModel)}
               />
             </div>
           </div>
@@ -312,13 +425,19 @@ export function ScrapbookView({
           {/* the leaf that turns: front = the page being turned away, back = the new page on the other side */}
           {turn && (
             <TurningLeaf
-              entryModel={entryModel}
-              key={turn.model.dateLabel}
+              actions={actions}
+              current={pages}
+              key={turn.leftDate}
+              labels={labels}
               onComplete={onTurnComplete}
-              onDelete={onDeleteScrap}
-              onTurnPage={handleTurnPage}
               turn={turn}
+              uiFor={uiFor}
             />
+          )}
+
+          {/* the edit tools of the entry being edited, under the book (hidden while a page turns) */}
+          {phase === 'open' && !turn && editDate && (
+            <EditBar actions={actions} date={editDate} labels={labels} />
           )}
         </div>
 
@@ -360,6 +479,46 @@ export function ScrapbookView({
           </div>
         </div>
       </div>
+
+      {modal?.type === 'scrap' && (
+        <ScrapFormModal
+          kinds={pages.kinds}
+          mediaLabels={pages.mediaLabels}
+          onClose={() => setModal(null)}
+          onSave={async (fields) => {
+            if (modal.scrap) await onUpdateScrap(modal.scrap.id, { kind: fields.kind, text: fields.text })
+            else await onAddScrap(modal.date, fields)
+            clearSelection()
+            setModal(null)
+          }}
+          recorder={recorder}
+          scrap={modal.scrap}
+          variant={modal.variant}
+        />
+      )}
+
+      {modal?.type === 'milestone' && (
+        <MilestoneModal
+          colors={pages.milestoneColors}
+          initialTitle={milestoneTitleFor(modal.scrap)}
+          onClose={() => setModal(null)}
+          onSave={(fields) => {
+            onMarkMilestone(modal.date, modal.scrap, fields)
+            clearSelection()
+            setModal(null)
+          }}
+        />
+      )}
+
+      {modal?.type === 'sticker' && (
+        <StickerModal
+          onClose={() => setModal(null)}
+          onPick={(stickerId) => {
+            onAddSticker(modal.date, stickerId)
+            setModal(null)
+          }}
+        />
+      )}
 
       {openIdea && (
         <IdeaModal
