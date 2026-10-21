@@ -1995,6 +1995,61 @@ button {
   cursor: pointer;
 }
 
+.memory-page > p {
+  margin: 8px 0 24px;
+  color: #626b75;
+}
+
+.memory-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(150px, 1fr));
+  gap: 12px;
+  max-width: 760px;
+}
+
+.memory-action {
+  min-height: 52px;
+  padding: 12px 16px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+
+.memory-action:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(45, 57, 70, 0.12);
+}
+
+.memory-action:focus-visible {
+  outline: 3px solid #9fc5ff;
+  outline-offset: 2px;
+}
+
+.memory-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.memory-action--add {
+  background: #edf4ff;
+  border-color: #c7ddfb;
+  color: #315f98;
+}
+
+.memory-action--record {
+  background: #fff0f0;
+  border-color: #f3cccc;
+  color: #a44343;
+}
+
+@media (max-width: 700px) {
+  .memory-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .book,
   .book-flipper,
