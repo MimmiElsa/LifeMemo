@@ -7,6 +7,7 @@ export function presentFolderPicker({ children = [] } = {}) {
     addFolderLabel: 'Add Folder',
     addFolderHint: 'Each child gets their own folder',
     nameLabel: 'Child\'s name',
+    namePlaceholder: 'e.g. Maya',
     saveLabel: 'Save',
     cancelLabel: 'Cancel',
     backLabel: 'Back',
