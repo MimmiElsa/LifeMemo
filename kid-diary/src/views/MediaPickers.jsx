@@ -83,16 +83,22 @@ function MediaPicker({ accept, chooseLabel, labels, onChange, recorder, actions,
   )
 }
 
-// A photo or video: choose a file, take a photo, or record a video
-export function PhotoPicker({ labels, onChange, recorder, value }) {
+// A photo, a video, or either (mode: 'photo', 'video' or 'any'): choose a file, or use the camera
+export function PhotoPicker({ labels, mode = 'any', onChange, recorder, value }) {
+  const actions = []
+  if (mode !== 'video') actions.push({ id: 'photo', label: labels.takePhoto, icon: 'camera', recorder: 'takePhoto' })
+  if (mode !== 'photo') {
+    actions.push({ id: 'video', label: labels.recordVideo, icon: 'video', recorder: 'recordVideo', recording: true })
+  }
+
+  const accept = { photo: 'image/*', video: 'video/*', any: 'image/*,video/*' }[mode]
+  const chooseLabel = { photo: labels.choosePhotoOnly, video: labels.chooseVideo, any: labels.choosePhoto }[mode]
+
   return (
     <MediaPicker
-      accept="image/*,video/*"
-      actions={[
-        { id: 'photo', label: labels.takePhoto, icon: 'camera', recorder: 'takePhoto' },
-        { id: 'video', label: labels.recordVideo, icon: 'camera', recorder: 'recordVideo', recording: true },
-      ]}
-      chooseLabel={labels.choosePhoto}
+      accept={accept}
+      actions={actions}
+      chooseLabel={chooseLabel}
       labels={labels}
       onChange={onChange}
       recorder={recorder}

@@ -36,17 +36,17 @@ function Modal({ children, onClose, title }) {
 
 // Add a scrap to a page, or change one.
 //   scrap:    the scrap being changed (leave out to add a new one)
-//   variant:  when adding: 'text' (words), 'photo' (a photo or video) or 'audio' (a recording);
-//             a photo or a recording can come with a few words
+//   variant:  when adding: 'text' (words), 'photo', 'video', 'audio' (a voice note) or 'media'
+//             (a photo or a video); anything but text can come with a few words
 //   kinds:    [{ id, label }]
 //   recorder: the camera and microphone functions, for the buttons that record
 export function ScrapFormModal({ kinds, mediaLabels, onClose, onSave, recorder, scrap, variant = 'text' }) {
   const isEdit = Boolean(scrap)
-  const hasFile = !isEdit && (variant === 'photo' || variant === 'audio')
+  const hasFile = !isEdit && variant !== 'text'
   const [kind, setKind] = useState(scrap?.kind ?? 'memory')
   const [text, setText] = useState(scrap?.text ?? '')
   const [file, setFile] = useState(null)
-  // a photo or recording scrap needs its file; the others need some words
+  // a photo, video or voice note needs its file; words need some words
   const canSave = hasFile ? Boolean(file) : text.trim() !== ''
 
   function handleSubmit(event) {
@@ -54,7 +54,15 @@ export function ScrapFormModal({ kinds, mediaLabels, onClose, onSave, recorder, 
     if (canSave) onSave({ kind, text: text.trim(), file })
   }
 
-  const titles = { text: 'Add some text', photo: 'Add a photo or video', audio: 'Add a recording' }
+  const titles = {
+    text: 'Add some text',
+    photo: 'Add a photo',
+    video: 'Add a video',
+    audio: 'Add a voice note',
+    media: 'Add a photo or video',
+  }
+  const fieldNames = { photo: 'Photo', video: 'Video', audio: 'Voice note', media: 'Photo or video' }
+  const pickerMode = { photo: 'photo', video: 'video', media: 'any' }[variant]
 
   return (
     <Modal onClose={onClose} title={isEdit ? 'Edit scrap' : titles[variant]}>
@@ -76,11 +84,11 @@ export function ScrapFormModal({ kinds, mediaLabels, onClose, onSave, recorder, 
 
         {hasFile && (
           <div className="modal-field">
-            <span>{variant === 'audio' ? 'Audio recording' : 'Photo or video'}</span>
+            <span>{fieldNames[variant]}</span>
             {variant === 'audio' ? (
               <AudioPicker labels={mediaLabels} onChange={setFile} recorder={recorder} value={file} />
             ) : (
-              <PhotoPicker labels={mediaLabels} onChange={setFile} recorder={recorder} value={file} />
+              <PhotoPicker labels={mediaLabels} mode={pickerMode} onChange={setFile} recorder={recorder} value={file} />
             )}
           </div>
         )}

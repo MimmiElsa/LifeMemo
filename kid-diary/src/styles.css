@@ -3217,3 +3217,84 @@ button {
   background: #ffd9d9;
   color: #a02020;
 }
+
+/* ====== Quick memory: the side bar button, its menu, and the dimmed page ====== */
+.quick-memory {
+  position: relative;
+  z-index: 30;
+}
+
+.quick-memory .new-memory-button {
+  width: 100%;
+}
+
+/* open: the button becomes a white "Close" button */
+.new-memory-button.is-open {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #fff;
+  color: #141a26;
+  font-weight: 600;
+  box-shadow: 0 8px 20px rgba(20, 26, 38, 0.22);
+}
+
+.quick-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  background: rgba(20, 26, 38, 0.45);
+}
+
+.quick-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  left: 0;
+  padding: 12px 8px 8px;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 18px 40px rgba(20, 26, 38, 0.28);
+}
+
+.quick-menu-title {
+  padding: 0 10px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #5b6577;
+}
+
+.quick-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  font: 600 14px Inter, sans-serif;
+  text-align: left;
+  color: #141a26;
+  cursor: pointer;
+}
+
+.quick-option:hover {
+  background: #eef0f4;
+}
+
+.quick-option-tile {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+}
+
+.quick-option-tile--photo { background: #ffe3dc; }
+.quick-option-tile--voice { background: #e3f0ff; }
+.quick-option-tile--video { background: #ffe0f2; }
+.quick-option-tile--write { background: #e8f5d8; }

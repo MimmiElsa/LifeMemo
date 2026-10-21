@@ -86,7 +86,7 @@ function IdeaModal({ idea, labels, onAnother, onClose }) {
 const TOOLS = [
   { id: 'text', icon: 'text', variant: 'text' },
   { id: 'stickers', icon: 'smile' },
-  { id: 'photo', icon: 'camera', variant: 'photo' },
+  { id: 'photo', icon: 'camera', variant: 'media' },
   { id: 'audio', icon: 'mic', variant: 'audio' },
 ]
 

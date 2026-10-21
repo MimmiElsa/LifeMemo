@@ -2,6 +2,8 @@
 // (shared by the template questions and the add-a-scrap popup).
 export const MEDIA_LABELS = {
   choosePhoto: 'Choose a photo or video',
+  choosePhotoOnly: 'Choose a photo',
+  chooseVideo: 'Choose a video',
   takePhoto: 'Take a photo',
   recordVideo: 'Record a video',
   chooseAudio: 'Choose an audio file',

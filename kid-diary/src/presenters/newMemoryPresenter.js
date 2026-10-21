@@ -60,3 +60,24 @@ export function presentTemplateForm({ template, date = toDayKey() }) {
     mediaLabels: MEDIA_LABELS,
   }
 }
+
+// The "Quick memory" menu in the side bar: add something to today's page in a few taps.
+// Each choice opens the small form of that kind (the `variant`).
+export function presentQuickMemory() {
+  return {
+    closeLabel: 'Close',
+    title: 'Add to today',
+    options: [
+      { id: 'photo', label: 'Photo', icon: 'camera', variant: 'photo' },
+      { id: 'voice', label: 'Voice note', icon: 'mic', variant: 'audio' },
+      { id: 'video', label: 'Video', icon: 'video', variant: 'video' },
+      { id: 'write', label: 'Write', icon: 'text', variant: 'text' },
+    ],
+    kinds: [
+      { id: 'memory', label: 'Memory' },
+      { id: 'activity', label: 'Activity' },
+      { id: 'interaction', label: 'Interaction' },
+    ],
+    mediaLabels: MEDIA_LABELS,
+  }
+}

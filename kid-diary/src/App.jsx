@@ -28,7 +28,7 @@ import { presentStartPage } from './presenters/startPagePresenter.js'
 import { presentCalendar } from './presenters/calendarPresenter.js'
 import { presentFolderPicker } from './presenters/folderPickerPresenter.js'
 import { presentMilestones } from './presenters/milestonesPresenter.js'
-import { presentNewMemory, presentTemplateForm } from './presenters/newMemoryPresenter.js'
+import { presentNewMemory, presentQuickMemory, presentTemplateForm } from './presenters/newMemoryPresenter.js'
 import { presentEntry, presentSpread } from './presenters/entryPresenter.js'
 import { presentScrapbook } from './presenters/scrapbookPresenter.js'
 import { presentSummary } from './presenters/summaryPresenter.js'
@@ -36,6 +36,7 @@ import { presentWelcome } from './presenters/welcomePresenter.js'
 import { createScrapbook } from './backend/models.js'
 import { AppShell } from './views/AppShell.jsx'
 import { CalendarView } from './views/CalendarView.jsx'
+import { ScrapFormModal } from './views/EntryModals.jsx'
 import { FolderPickerView } from './views/FolderPickerView.jsx'
 import { MilestonesView } from './views/MilestonesView.jsx'
 import { NewMemoryView } from './views/NewMemoryView.jsx'
@@ -99,6 +100,9 @@ function App() {
   // the new memory screens: null when closed, else { templateId, date, from }
   // (date = the day it is for, from = the page to go back to)
   const [newMemory, setNewMemory] = useState(null)
+  // the Quick memory menu in the side bar: whether it is open, and the form chosen from it
+  const [quickOpen, setQuickOpen] = useState(false)
+  const [quickVariant, setQuickVariant] = useState(null)
   const calendar = useCalendar(activeChildId, activeRoute === 'calendar')
   const summaryData = useMonthlySummary(
     activeChildId,
@@ -113,6 +117,14 @@ function App() {
   const spread = spreadAround(entryDate, pageDates)
   const leftPage = useEntryPage(activeChildId, spread.leftDate, scrapbookShowing, dataVersion)
   const rightPage = useEntryPage(activeChildId, spread.rightDate, scrapbookShowing, dataVersion)
+
+  // Escape closes the Quick memory menu
+  useEffect(() => {
+    if (!quickOpen) return undefined
+    const close = (event) => event.key === 'Escape' && setQuickOpen(false)
+    window.addEventListener('keydown', close)
+    return () => window.removeEventListener('keydown', close)
+  }, [quickOpen])
 
   // put Lucas's demo days in the store, so the calendar has something to show
   useEffect(() => {
@@ -191,6 +203,14 @@ function App() {
     setDataVersion((version) => version + 1)
   }
 
+  // Quick memory: a form for one kind of scrap, saved on today's page, and the book opens on it
+  async function saveQuickMemory(fields) {
+    const date = toDayKey()
+    const scrapId = await addScrapToPage(date, fields)
+    setQuickVariant(null)
+    openEntry(date, scrapId)
+  }
+
   // New memory: first the choice (a blank page or a template), then the template's questions
   // `date` is the day the memory is for: today, or a day picked on the calendar or on a blank page
   function openNewMemory(templateId = null, date = toDayKey()) {
@@ -236,6 +256,7 @@ function App() {
     const scrap = await addScrap({ childId: activeChildId, date, kind, text })
     if (file) await attachFile(scrap.id, file)
     refreshData()
+    return scrap.id
   }
 
   // Save a photo, a video or an audio recording on a scrap
@@ -445,7 +466,10 @@ function App() {
     )
   }
 
+  const quickModel = presentQuickMemory()
+
   return (
+    <>
     <AppShell
       activeRoute={activeRoute === 'summary' ? 'calendar' : activeRoute}
       navigationItems={navigationItems}
@@ -460,11 +484,31 @@ function App() {
         }
         setActiveRoute(route)
       }}
-      onNewMemory={() => openNewMemory()}
       onSwitchFolder={() => setStage('folders')}
+      quick={{
+        model: quickModel,
+        open: quickOpen,
+        onToggle: () => setQuickOpen((open) => !open),
+        onPick: (option) => {
+          setQuickOpen(false)
+          setQuickVariant(option.variant)
+        },
+      }}
     >
       {page}
     </AppShell>
+
+    {quickVariant && (
+      <ScrapFormModal
+        kinds={quickModel.kinds}
+        mediaLabels={quickModel.mediaLabels}
+        onClose={() => setQuickVariant(null)}
+        onSave={saveQuickMemory}
+        recorder={recorder}
+        variant={quickVariant}
+      />
+    )}
+    </>
   )
 }
 

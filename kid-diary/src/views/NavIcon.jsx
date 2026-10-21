@@ -32,6 +32,12 @@ const paths = {
       <circle cx="12" cy="13" r="3.3" />
     </>
   ),
+  video: (
+    <>
+      <rect x="3" y="6.5" width="12" height="11" rx="2.5" />
+      <path d="M15 10.5l5.5-3v9l-5.5-3" />
+    </>
+  ),
   trash: <path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12" />,
   check: <path d="M5 12.5l4.5 4.5L19 7.5" />,
   plus: <path d="M12 5v14M5 12h14" />,
