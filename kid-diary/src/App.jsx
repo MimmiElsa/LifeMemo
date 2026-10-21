@@ -43,6 +43,7 @@ import {
 } from './presenters/newMemoryPresenter.js'
 import { presentEntry, presentSpread } from './presenters/entryPresenter.js'
 import { presentScrapbook } from './presenters/scrapbookPresenter.js'
+import { presentIllustrations } from './presenters/illustrationsPresenter.js'
 import { presentMoodStep } from './presenters/moodPickerPresenter.js'
 import { presentSettings } from './presenters/settingsPresenter.js'
 import { presentSummary } from './presenters/summaryPresenter.js'
@@ -55,6 +56,7 @@ import { FolderPickerView } from './views/FolderPickerView.jsx'
 import { MilestonesView } from './views/MilestonesView.jsx'
 import { NewMemoryView } from './views/NewMemoryView.jsx'
 import { PlaceholderPageView } from './views/PlaceholderPageView.jsx'
+import { IllustrationsView } from './views/IllustrationsView.jsx'
 import { MoodStepView } from './views/MoodStepView.jsx'
 import { PromptMemoryView } from './views/PromptMemoryView.jsx'
 import { ScrapbookView } from './views/ScrapbookView.jsx'
@@ -489,7 +491,13 @@ function App() {
   const pageTitle = activeRoute === 'newMemory' ? 'New Memory' : activeItem?.label ?? 'Page'
   let page = <PlaceholderPageView title={pageTitle} />
   if (activeRoute === 'home') {
-    page = <StartPageView model={presentStartPage({ child: activeChild })} onOpenTemplate={openNewMemory} />
+    page = <StartPageView
+        model={presentStartPage({ child: activeChild })}
+        onOpenIllustrations={() => goTo('illustrations')}
+        onOpenTemplate={openNewMemory}
+      />
+  } else if (activeRoute === 'illustrations') {
+    page = <IllustrationsView model={presentIllustrations()} onBack={() => goTo('home', 'back')} />
   } else if (activeRoute === 'milestones') {
     page = (
       <MilestonesView
@@ -587,7 +595,9 @@ function App() {
   return (
     <div className={`screen screen--${stageMotion}`} key="app">
       <AppShell
-        activeRoute={activeRoute === 'summary' ? 'calendar' : activeRoute}
+        activeRoute={
+          activeRoute === 'summary' ? 'calendar' : activeRoute === 'illustrations' ? 'home' : activeRoute
+        }
         motion={motion}
         navigationItems={navigationItems}
         navigationModel={presentSideNavigation({ child: activeChild })}

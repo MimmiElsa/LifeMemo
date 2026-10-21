@@ -1,7 +1,7 @@
 import orangeOpen from '../../assets/stickers/orange-open@3x 2.png'
 import orangeO from '../../assets/stickers/orange-o@3x 2.png'
 
-export function StartPageView({ model, onOpenTemplate }) {
+export function StartPageView({ model, onOpenIllustrations, onOpenTemplate }) {
   return (
     <section className="startpage">
         <div>
@@ -49,9 +49,15 @@ export function StartPageView({ model, onOpenTemplate }) {
                   <h4>Conversation Topics</h4>
                   <p>Let's talk! Get inspired</p>
                 </div>
-                <div className="interaction-card use-illustrations">
+                <div
+                  className="interaction-card use-illustrations"
+                  onClick={onOpenIllustrations}
+                  onKeyDown={(event) => event.key === 'Enter' && onOpenIllustrations()}
+                  role="button"
+                  tabIndex={0}
+                >
                   <h4>Use Illustrations</h4>
-                  <p>Check with pictures</p>
+                  <p>Look and talk with pictures</p>
                 </div>
               </div>
             </div>

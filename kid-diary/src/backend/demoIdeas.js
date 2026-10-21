@@ -26,14 +26,6 @@ export const DAILY_CHALLENGES = [
   'Find something that starts with the letter B',
 ]
 
-// The illustration sets for the "Use Illustrations" card (the pictures come later)
-export const ILLUSTRATION_SETS = [
-  { id: 'animals', title: 'Animals', hint: 'Point and say the animal' },
-  { id: 'feelings', title: 'Feelings', hint: 'How do you feel today?' },
-  { id: 'daily-routine', title: 'My day', hint: 'Morning, lunch, bedtime' },
-  { id: 'colours', title: 'Colours', hint: 'Find the colour' },
-]
-
 // Today's challenge. The same day always gives the same challenge.
 export function getDailyChallenge(date = new Date()) {
   const dayNumber = Math.floor(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000)
@@ -171,3 +163,71 @@ const PICTURES_BY_ID = new Map(
 export function getPicture(id) {
   return PICTURES_BY_ID.get(id) ?? null
 }
+
+// The picture library behind the "Use Illustrations" card: pictures for talking together, in
+// groups a toddler can tell apart. Each picture has its word under it. Give a picture an `image`
+// to replace its emoji.
+const category = (id, label, cover, items) => ({ id, label, cover, items })
+
+export const ILLUSTRATION_LIBRARY = [
+  category('animals', 'Animals', '🐶', [
+    picture('dog', 'Dog', '🐶'),
+    picture('cat', 'Cat', '🐱'),
+    picture('cow', 'Cow', '🐮'),
+    picture('duck', 'Duck', '🦆'),
+    picture('fish', 'Fish', '🐟'),
+    picture('horse', 'Horse', '🐴'),
+    picture('rabbit', 'Rabbit', '🐰'),
+    picture('bird', 'Bird', '🐦'),
+  ]),
+  category('food', 'Food', '🍎', [
+    picture('apple', 'Apple', '🍎'),
+    picture('banana', 'Banana', '🍌'),
+    picture('bread', 'Bread', '🍞'),
+    picture('cheese', 'Cheese', '🧀'),
+    picture('carrot', 'Carrot', '🥕'),
+    picture('milk', 'Milk', '🥛'),
+    picture('cookie', 'Cookie', '🍪'),
+    picture('water', 'Water', '💧'),
+  ]),
+  category('feelings', 'Feelings', '😄', [
+    picture('happy', 'Happy', '😄', yellowGrinImage),
+    picture('sad', 'Sad', '😢'),
+    picture('cross', 'Cross', '😠'),
+    picture('surprised', 'Surprised', '😮', lilacOImage),
+    picture('tired', 'Tired', '😴', napImage),
+    picture('scared', 'Scared', '😨'),
+  ]),
+  category('playing', 'Playing', '⚽', [
+    picture('ball', 'Ball', '⚽', footballImage),
+    picture('paint', 'Painting', '🎨', paintingImage),
+    picture('blocks', 'Blocks', '🧱', blocksImage),
+    picture('book', 'Book', '📚', readingImage),
+    picture('music', 'Singing', '🎵', singingImage),
+    picture('park', 'Swing', '🛝', swingImage),
+  ]),
+  category('people', 'People', '👪', [
+    picture('mum', 'Mum', '👩'),
+    picture('dad', 'Dad', '👨'),
+    picture('baby', 'Baby', '👶'),
+    picture('grandma', 'Grandma', '👵'),
+    picture('grandpa', 'Grandpa', '👴'),
+    picture('friend', 'Friend', '🧒', friendsImage),
+  ]),
+  category('home', 'Home', '🏠', [
+    picture('bed', 'Bed', '🛏️'),
+    picture('bath', 'Bath', '🛁'),
+    picture('teeth', 'Brush teeth', '🪥'),
+    picture('chair', 'Chair', '🪑'),
+    picture('door', 'Door', '🚪'),
+    picture('cup', 'Cup', '🥤'),
+  ]),
+  category('outside', 'Outside', '🌳', [
+    picture('sun', 'Sun', '☀️'),
+    picture('rain', 'Rain', '🌧️'),
+    picture('tree', 'Tree', '🌳'),
+    picture('flower', 'Flower', '🌻'),
+    picture('car', 'Car', '🚗'),
+    picture('bus', 'Bus', '🚌'),
+  ]),
+]
