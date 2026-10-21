@@ -1,5 +1,6 @@
 import { MEMORY_TEMPLATES } from '../backend/memoryTemplates.js'
 import { toDayKey } from '../backend/utils/dates.js'
+import { MEDIA_LABELS } from './mediaLabels.js'
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -56,8 +57,6 @@ export function presentTemplateForm({ template, date = toDayKey() }) {
     color: TEMPLATE_COLORS[template.id],
     fields: template.fields,
     saveLabel: 'Add to the page',
-    takePhotoLabel: 'Take a photo',
-    choosePhotoLabel: 'Choose a photo or video',
-    removePhotoLabel: 'Remove',
+    mediaLabels: MEDIA_LABELS,
   }
 }

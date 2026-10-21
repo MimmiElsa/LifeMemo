@@ -3206,3 +3206,14 @@ button {
   border-radius: 24px;
   font-size: 14px;
 }
+
+/* audio on a scrap, and the button while a recording is going */
+.scrap audio {
+  display: block;
+  width: 100%;
+}
+
+.answer-pill--recording {
+  background: #ffd9d9;
+  color: #a02020;
+}

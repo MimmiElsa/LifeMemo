@@ -87,7 +87,7 @@ const TOOLS = [
   { id: 'text', icon: 'text', variant: 'text' },
   { id: 'stickers', icon: 'smile' },
   { id: 'photo', icon: 'camera', variant: 'photo' },
-  { id: 'audio', icon: 'mic', disabled: true },
+  { id: 'audio', icon: 'mic', variant: 'audio' },
 ]
 
 function EditBar({ actions, date, labels }) {
@@ -102,10 +102,8 @@ function EditBar({ actions, date, labels }) {
         {TOOLS.map((tool) => (
           <button
             className="edit-tool"
-            disabled={tool.disabled}
             key={tool.id}
             onClick={() => pickTool(tool)}
-            title={tool.disabled ? labels.tools.audioSoon : undefined}
             type="button"
           >
             <span className={`edit-tool-tile edit-tool-tile--${tool.id}`}>
@@ -188,6 +186,7 @@ export function ScrapbookView({
   onTurnPage,
   onUnmarkMilestone,
   onUpdateScrap,
+  recorder,
   spread: pages,
   turn = null,
 }) {
@@ -484,6 +483,7 @@ export function ScrapbookView({
       {modal?.type === 'scrap' && (
         <ScrapFormModal
           kinds={pages.kinds}
+          mediaLabels={pages.mediaLabels}
           onClose={() => setModal(null)}
           onSave={async (fields) => {
             if (modal.scrap) await onUpdateScrap(modal.scrap.id, { kind: fields.kind, text: fields.text })
@@ -491,6 +491,7 @@ export function ScrapbookView({
             clearSelection()
             setModal(null)
           }}
+          recorder={recorder}
           scrap={modal.scrap}
           variant={modal.variant}
         />

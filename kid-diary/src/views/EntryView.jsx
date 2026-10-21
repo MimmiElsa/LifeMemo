@@ -105,13 +105,11 @@ function Scrap({ actions, date, editing, labels, scrap, selected }) {
         }}
       >
         {hasMedia &&
-          scrap.media.map((item) =>
-            item.kind === 'video' ? (
-              <video controls key={item.id} src={item.url} />
-            ) : (
-              <img alt={item.name} key={item.id} src={item.url} />
-            ),
-          )}
+          scrap.media.map((item) => {
+            if (item.kind === 'video') return <video controls key={item.id} src={item.url} />
+            if (item.kind === 'audio') return <audio controls key={item.id} src={item.url} />
+            return <img alt={item.name} key={item.id} src={item.url} />
+          })}
         <span className="scrap-label">
           {scrap.isMilestone && <NavIcon name="blocks" size={13} />}
           {scrap.label}

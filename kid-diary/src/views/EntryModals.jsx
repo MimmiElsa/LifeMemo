@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { AudioPicker, PhotoPicker } from './MediaPickers.jsx'
 import { NavIcon } from './NavIcon.jsx'
 import { StickerArt } from './stickerCatalog.jsx'
 import { STICKERS } from './stickerList.js'
@@ -35,24 +36,28 @@ function Modal({ children, onClose, title }) {
 
 // Add a scrap to a page, or change one.
 //   scrap:    the scrap being changed (leave out to add a new one)
-//   variant:  when adding: 'text' (words) or 'photo' (a photo or video, with words if you like)
+//   variant:  when adding: 'text' (words), 'photo' (a photo or video) or 'audio' (a recording);
+//             a photo or a recording can come with a few words
 //   kinds:    [{ id, label }]
-export function ScrapFormModal({ kinds, onClose, onSave, scrap, variant = 'text' }) {
+//   recorder: the camera and microphone functions, for the buttons that record
+export function ScrapFormModal({ kinds, mediaLabels, onClose, onSave, recorder, scrap, variant = 'text' }) {
   const isEdit = Boolean(scrap)
-  const isPhoto = !isEdit && variant === 'photo'
+  const hasFile = !isEdit && (variant === 'photo' || variant === 'audio')
   const [kind, setKind] = useState(scrap?.kind ?? 'memory')
   const [text, setText] = useState(scrap?.text ?? '')
   const [file, setFile] = useState(null)
-  // a photo scrap needs its photo or video; the others need some words
-  const canSave = isPhoto ? Boolean(file) : text.trim() !== ''
+  // a photo or recording scrap needs its file; the others need some words
+  const canSave = hasFile ? Boolean(file) : text.trim() !== ''
 
   function handleSubmit(event) {
     event.preventDefault()
     if (canSave) onSave({ kind, text: text.trim(), file })
   }
 
+  const titles = { text: 'Add some text', photo: 'Add a photo or video', audio: 'Add a recording' }
+
   return (
-    <Modal onClose={onClose} title={isEdit ? 'Edit scrap' : isPhoto ? 'Add a photo or video' : 'Add some text'}>
+    <Modal onClose={onClose} title={isEdit ? 'Edit scrap' : titles[variant]}>
       <form className="modal-form" onSubmit={handleSubmit}>
         <div className="modal-chips" role="radiogroup">
           {kinds.map((item) => (
@@ -69,23 +74,26 @@ export function ScrapFormModal({ kinds, onClose, onSave, scrap, variant = 'text'
           ))}
         </div>
 
-        {isPhoto && (
-          <label className="modal-field">
-            <span>Photo or video</span>
-            <input accept="image/*,video/*" onChange={(event) => setFile(event.target.files[0] ?? null)} type="file" />
-          </label>
+        {hasFile && (
+          <div className="modal-field">
+            <span>{variant === 'audio' ? 'Audio recording' : 'Photo or video'}</span>
+            {variant === 'audio' ? (
+              <AudioPicker labels={mediaLabels} onChange={setFile} recorder={recorder} value={file} />
+            ) : (
+              <PhotoPicker labels={mediaLabels} onChange={setFile} recorder={recorder} value={file} />
+            )}
+          </div>
         )}
         <label className="modal-field">
-          <span>{isPhoto ? 'Words to go with it (optional)' : 'What happened?'}</span>
+          <span>{hasFile ? 'Words to go with it (optional)' : 'What happened?'}</span>
           <textarea
-            autoFocus={!isPhoto}
+            autoFocus={!hasFile}
             onChange={(event) => setText(event.target.value)}
             placeholder="Write a few words..."
-            rows={isPhoto ? 3 : 4}
+            rows={hasFile ? 3 : 4}
             value={text}
           />
         </label>
-
 
         <div className="idea-actions">
           <button className="dark-pill-button dark-pill-button--large" disabled={!canSave} type="submit">

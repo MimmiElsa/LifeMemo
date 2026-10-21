@@ -1,6 +1,6 @@
 // Issue #10 - Upload picture/media
 //
-// A photo or video belongs to a scrap (one item on a day's page).
+// A photo, video or audio recording belongs to a scrap (one item on a day's page).
 
 import { createId } from '../utils/ids.js'
 import { get, put, remove } from '../store.js'
@@ -32,7 +32,13 @@ export async function saveVideo({ scrapId, file }) {
 	return video
 }
 
-// Any photo or video by id (or undefined)
+export async function saveAudio({ scrapId, file }) {
+	const audio = createMedia({ scrapId, kind: 'audio', file })
+	await put('media', audio)
+	return audio
+}
+
+// Any photo, video or audio recording by id (or undefined)
 export async function loadMedia(id) {
 	return get('media', id)
 }
@@ -47,6 +53,11 @@ export async function loadVideo(id) {
 	return video?.kind === 'video' ? video : undefined
 }
 
+export async function loadAudio(id) {
+	const audio = await get('media', id)
+	return audio?.kind === 'audio' ? audio : undefined
+}
+
 export async function deletePhoto(id) {
 	const photo = await loadPhoto(id)
 	if (photo) await remove('media', id)
@@ -55,4 +66,9 @@ export async function deletePhoto(id) {
 export async function deleteVideo(id) {
 	const video = await loadVideo(id)
 	if (video) await remove('media', id)
+}
+
+export async function deleteAudio(id) {
+	const audio = await loadAudio(id)
+	if (audio) await remove('media', id)
 }

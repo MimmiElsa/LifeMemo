@@ -7,8 +7,11 @@ import {
   getOrCreateEntry,
   moveScrap,
   moveSticker,
+  recordAudio,
   recordPhoto,
+  recordVideo,
   removeSticker,
+  saveAudio,
   savePhoto,
   saveVideo,
   updateScrap,
@@ -67,6 +70,9 @@ function randomStickerSpot() {
     rotation: Math.round(Math.random() * 30 - 15),
   }
 }
+
+// The camera and microphone functions (they ask the person for permission when they are used)
+const recorder = { takePhoto: recordPhoto, recordVideo, recordAudio }
 
 function App() {
   const navigationItems = getNavigationItems()
@@ -204,15 +210,10 @@ function App() {
   // and the book opens on it
   async function saveTemplateMemory(template, answers) {
     const date = newMemory.date
-    const { kind, text, file, milestoneTitle } = buildScrapFromAnswers(template, answers)
+    const { kind, text, files, milestoneTitle } = buildScrapFromAnswers(template, answers)
 
     const scrap = await addScrap({ childId: activeChildId, date, kind, text })
-    if (file) {
-      const media = file.type.startsWith('video/')
-        ? await saveVideo({ scrapId: scrap.id, file })
-        : await savePhoto({ scrapId: scrap.id, file })
-      await attachMediaToScrap(scrap.id, media.id)
-    }
+    for (const file of files) await attachFile(scrap.id, file)
     if (milestoneTitle) {
       markScrapAsMilestone(date, scrap, { title: milestoneTitle, color: '#FFD84D' })
     }
@@ -233,13 +234,15 @@ function App() {
   // Add a scrap (and its photo or video, if one was picked) to an entry
   async function addScrapToPage(date, { kind, text, file }) {
     const scrap = await addScrap({ childId: activeChildId, date, kind, text })
-    if (file) {
-      const media = file.type.startsWith('video/')
-        ? await saveVideo({ scrapId: scrap.id, file })
-        : await savePhoto({ scrapId: scrap.id, file })
-      await attachMediaToScrap(scrap.id, media.id)
-    }
+    if (file) await attachFile(scrap.id, file)
     refreshData()
+  }
+
+  // Save a photo, a video or an audio recording on a scrap
+  async function attachFile(scrapId, file) {
+    const save = file.type.startsWith('video/') ? saveVideo : file.type.startsWith('audio/') ? saveAudio : savePhoto
+    const media = await save({ scrapId, file })
+    await attachMediaToScrap(scrapId, media.id)
   }
 
   async function changeScrap(scrapId, fields) {
@@ -346,6 +349,7 @@ function App() {
         onTurnPage={turnPage}
         onUnmarkMilestone={unmarkScrapAsMilestone}
         onUpdateScrap={changeScrap}
+        recorder={recorder}
         spread={bookSpread}
         turn={
           turn && {
@@ -421,7 +425,7 @@ function App() {
           model={presentTemplateForm({ template, date: newMemory.date })}
           onBack={() => setNewMemory({ ...newMemory, templateId: null })}
           onSave={(answers) => saveTemplateMemory(template, answers)}
-          onTakePhoto={recordPhoto}
+          recorder={recorder}
           template={template}
         />
       )

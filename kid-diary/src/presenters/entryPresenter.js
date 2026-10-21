@@ -1,4 +1,5 @@
 import { toDayKey } from '../backend/utils/dates.js'
+import { MEDIA_LABELS } from './mediaLabels.js'
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -85,7 +86,7 @@ export function presentSpread({ left, right = null, previousDate = null, nextDat
       editEntry: 'Edit entry',
       editing: 'Editing',
       done: 'Done',
-      tools: { text: 'Text', stickers: 'Stickers', photo: 'Photo', audio: 'Audio', audioSoon: 'Coming soon' },
+      tools: { text: 'Text', stickers: 'Stickers', photo: 'Photo', audio: 'Audio' },
       addToMilestone: 'Add to milestone',
       removeFromMilestones: 'Remove from milestones',
       editScrap: 'Edit scrap',
@@ -96,6 +97,7 @@ export function presentSpread({ left, right = null, previousDate = null, nextDat
       moveDown: 'Move down',
       removeSticker: 'Remove sticker',
     },
+    mediaLabels: MEDIA_LABELS,
     milestoneColors: MILESTONE_COLORS,
     kinds: Object.entries(KIND_LABELS).map(([id, label]) => ({ id, label })),
   }

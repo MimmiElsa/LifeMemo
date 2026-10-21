@@ -6,6 +6,7 @@
 //   'short'  one line of words        'long'   a few lines of words
 //   'topic'  a topic: pick a suggestion or write your own
 //   'photo'  a photo or video (a file)
+//   'audio'  an audio recording (a file)
 //
 // Answers are kept in an object by field id: { what: 'Built a pillow fort', photo: File, ... }
 
@@ -30,9 +31,10 @@ export const MEMORY_TEMPLATES = [
     fields: [
       { id: 'photo', type: 'photo', label: 'A photo or video' },
       { id: 'story', type: 'long', label: 'The story', placeholder: 'What happened?' },
+      { id: 'audio', type: 'audio', label: 'A recording' },
     ],
-    // a photo or a story is enough
-    needsOneOf: ['photo', 'story'],
+    // a photo, a story or a recording is enough
+    needsOneOf: ['photo', 'story', 'audio'],
   },
   {
     id: 'conversation',
@@ -48,6 +50,7 @@ export const MEMORY_TEMPLATES = [
         suggestions: ['A new word', 'A funny question', 'Something they asked', 'A song or a rhyme', 'What they think'],
       },
       { id: 'said', type: 'long', label: 'What was said?', placeholder: 'Write something', required: true },
+      { id: 'audio', type: 'audio', label: 'A recording of it' },
     ],
   },
   {
@@ -84,7 +87,7 @@ export function canSaveMemory(template, answers) {
 }
 
 // Turns the answers into what a scrap is made of:
-//   { kind, text, file, milestoneTitle }  (file and milestoneTitle can be null)
+//   { kind, text, files, milestoneTitle }  (files is a list that can be empty; milestoneTitle can be null)
 // The words of each answer go on their own line, so the scrap reads like the questions did.
 export function buildScrapFromAnswers(template, answers) {
   const say = (fieldId) => (answers[fieldId] ?? '').trim()
@@ -103,7 +106,7 @@ export function buildScrapFromAnswers(template, answers) {
   return {
     kind: template.kind,
     text: lines.filter(Boolean).join('\n'),
-    file: answers.photo ?? null,
+    files: [answers.photo, answers.audio].filter(Boolean),
     milestoneTitle: template.isMilestone ? say('title') : null,
   }
 }
