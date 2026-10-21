@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   addScrap,
   addSticker,
@@ -8,12 +8,12 @@ import {
   moveScrap,
   moveSticker,
   recordPhoto,
-  recordVideo,
   removeSticker,
   savePhoto,
   saveVideo,
   updateScrap,
 } from './backend/index.js'
+import { buildScrapFromAnswers, getMemoryTemplate } from './backend/memoryTemplates.js'
 import { createMilestone } from './backend/models.js'
 import { LUCAS_DEMO, seedDemoData } from './backend/demoData.js'
 import { toDayKey } from './backend/utils/dates.js'
@@ -25,7 +25,7 @@ import { presentStartPage } from './presenters/startPagePresenter.js'
 import { presentCalendar } from './presenters/calendarPresenter.js'
 import { presentFolderPicker } from './presenters/folderPickerPresenter.js'
 import { presentMilestones } from './presenters/milestonesPresenter.js'
-import { presentNewMemory } from './presenters/newMemoryPresenter.js'
+import { presentNewMemory, presentTemplateForm } from './presenters/newMemoryPresenter.js'
 import { presentEntry, presentSpread } from './presenters/entryPresenter.js'
 import { presentScrapbook } from './presenters/scrapbookPresenter.js'
 import { presentSummary } from './presenters/summaryPresenter.js'
@@ -40,6 +40,7 @@ import { PlaceholderPageView } from './views/PlaceholderPageView.jsx'
 import { ScrapbookView } from './views/ScrapbookView.jsx'
 import { StartPageView } from './views/StartPageView.jsx'
 import { SummaryView } from './views/SummaryView.jsx'
+import { TemplateFormView } from './views/TemplateFormView.jsx'
 import { WelcomeView } from './views/WelcomeView.jsx'
 
 // The book shows two entries (pages of days) side by side. The pages come one after the other
@@ -89,10 +90,9 @@ function App() {
     month: new Date().getMonth() + 1,
   }))
   const [summaryShuffle, setSummaryShuffle] = useState(0)
-  const [status, setStatus] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [recording, setRecording] = useState(false)
-  const videoStopRef = useRef(null)
+  // the new memory screens: null when closed, else { templateId, date, from }
+  // (date = the day it is for, from = the page to go back to)
+  const [newMemory, setNewMemory] = useState(null)
   const calendar = useCalendar(activeChildId, activeRoute === 'calendar')
   const summaryData = useMonthlySummary(
     activeChildId,
@@ -112,46 +112,6 @@ function App() {
   useEffect(() => {
     seedDemoData()
   }, [])
-
-  async function addMedia(file, kind) {
-    if (!file || !activeChildId) return
-    // each upload becomes a scrap on today's page for this child
-    const scrap = await addScrap({ childId: activeChildId, date: toDayKey(), kind: 'memory' })
-    const media = kind === 'photo'
-      ? await savePhoto({ scrapId: scrap.id, file })
-      : await saveVideo({ scrapId: scrap.id, file })
-    await attachMediaToScrap(scrap.id, media.id)
-    refreshData()
-    setStatus(`${kind === 'photo' ? 'Photo' : 'Video'} added.`)
-  }
-
-  async function runMediaAction(action) {
-    setBusy(true)
-    try {
-      await action()
-    } catch (error) {
-      setStatus(error.message)
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  function renderNewMemory() {
-    return (
-      <NewMemoryView
-        model={presentNewMemory({ busy, recording, status })}
-        onAddFile={(file, kind) => runMediaAction(() => addMedia(file, kind))}
-        onRecordPhoto={() => runMediaAction(() => addRecordedMedia('photo'))}
-        onRecordVideo={() => {
-          if (recording) {
-            videoStopRef.current?.()
-          } else {
-            runMediaAction(() => addRecordedMedia('video'))
-          }
-        }}
-      />
-    )
-  }
 
   function renderCalendar() {
     const child = children.find((c) => c.id === activeChildId)
@@ -176,7 +136,7 @@ function App() {
         }}
         onPreviousMonth={calendar.showPreviousMonth}
         onSelectDate={calendar.selectDate}
-        onStartEntry={startEntry}
+        onStartEntry={(date) => openNewMemory(null, date)}
         onViewEntry={(date, scrapId = null) => openEntry(date, scrapId)}
       />
     )
@@ -223,6 +183,43 @@ function App() {
 
   function refreshData() {
     setDataVersion((version) => version + 1)
+  }
+
+  // New memory: first the choice (a blank page or a template), then the template's questions
+  // `date` is the day the memory is for: today, or a day picked on the calendar or on a blank page
+  function openNewMemory(templateId = null, date = toDayKey()) {
+    setNewMemory({ templateId, date, from: activeRoute === 'newMemory' ? 'home' : activeRoute })
+    setActiveRoute('newMemory')
+  }
+
+  function closeNewMemory() {
+    const { from, date } = newMemory
+    setNewMemory(null)
+    // from the book, go back to the same page with the book open
+    if (from === 'scrapbook') openEntry(date)
+    else setActiveRoute(from ?? 'home')
+  }
+
+  // A template's answers become a scrap on the day's page (and a milestone for the Milestone template),
+  // and the book opens on it
+  async function saveTemplateMemory(template, answers) {
+    const date = newMemory.date
+    const { kind, text, file, milestoneTitle } = buildScrapFromAnswers(template, answers)
+
+    const scrap = await addScrap({ childId: activeChildId, date, kind, text })
+    if (file) {
+      const media = file.type.startsWith('video/')
+        ? await saveVideo({ scrapId: scrap.id, file })
+        : await savePhoto({ scrapId: scrap.id, file })
+      await attachMediaToScrap(scrap.id, media.id)
+    }
+    if (milestoneTitle) {
+      markScrapAsMilestone(date, scrap, { title: milestoneTitle, color: '#FFD84D' })
+    }
+
+    refreshData()
+    setNewMemory(null)
+    openEntry(date, scrap.id)
   }
 
   // Start the entry of a day (from the calendar), also one that has passed: its page is made,
@@ -338,6 +335,7 @@ function App() {
         initiallyOpen={scrapbookInitiallyOpen}
         model={presentScrapbook({ child: activeChild })}
         onAddScrap={addScrapToPage}
+        onNewMemory={(date) => openNewMemory(null, date)}
         onAddSticker={stickOnPage}
         onDeleteScrap={removeScrap}
         onMarkMilestone={markScrapAsMilestone}
@@ -359,27 +357,6 @@ function App() {
         }
       />
     )
-  }
-
-  async function addRecordedMedia(kind) {
-    if (kind === 'photo') {
-      await addMedia(await recordPhoto(), kind)
-      return
-    }
-
-    let file
-    try {
-      file = await recordVideo({
-        onStart: (stop) => {
-          videoStopRef.current = stop
-          setRecording(true)
-        },
-      })
-    } finally {
-      videoStopRef.current = null
-      setRecording(false)
-    }
-    await addMedia(file, kind)
   }
 
   if (stage === 'welcome') {
@@ -410,7 +387,7 @@ function App() {
   const pageTitle = activeRoute === 'newMemory' ? 'New Memory' : activeItem?.label ?? 'Page'
   let page = <PlaceholderPageView title={pageTitle} />
   if (activeRoute === 'home') {
-    page = <StartPageView model={presentStartPage({ child: activeChild })} />
+    page = <StartPageView model={presentStartPage({ child: activeChild })} onOpenTemplate={openNewMemory} />
   } else if (activeRoute === 'milestones') {
     page = (
       <MilestonesView
@@ -418,8 +395,6 @@ function App() {
         onOpenMilestone={(block) => openEntry(block.date, block.scrapId)}
       />
     )
-  } else if (activeRoute === 'newMemory') {
-    page = renderNewMemory()
   } else if (activeRoute === 'scrapbook') {
     page = renderScrapbook()
   } else if (activeRoute === 'calendar') {
@@ -434,6 +409,34 @@ function App() {
         })}
         onBack={() => setActiveRoute('calendar')}
         onShuffle={() => setSummaryShuffle((count) => count + 1)}
+      />
+    )
+  }
+
+  if (activeRoute === 'newMemory') {
+    const template = getMemoryTemplate(newMemory?.templateId)
+    if (template) {
+      return (
+        <TemplateFormView
+          model={presentTemplateForm({ template, date: newMemory.date })}
+          onBack={() => setNewMemory({ ...newMemory, templateId: null })}
+          onSave={(answers) => saveTemplateMemory(template, answers)}
+          onTakePhoto={recordPhoto}
+          template={template}
+        />
+      )
+    }
+
+    return (
+      <NewMemoryView
+        model={presentNewMemory({ date: newMemory?.date })}
+        onClose={closeNewMemory}
+        onPickTemplate={(templateId) => setNewMemory({ ...newMemory, templateId })}
+        onStartBlank={() => {
+          const date = newMemory.date
+          setNewMemory(null)
+          startEntry(date)
+        }}
       />
     )
   }
@@ -453,7 +456,7 @@ function App() {
         }
         setActiveRoute(route)
       }}
-      onNewMemory={() => setActiveRoute('newMemory')}
+      onNewMemory={() => openNewMemory()}
       onSwitchFolder={() => setStage('folders')}
     >
       {page}

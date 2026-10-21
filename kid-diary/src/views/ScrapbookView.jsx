@@ -182,6 +182,7 @@ export function ScrapbookView({
   onMarkMilestone,
   onMoveScrap,
   onMoveSticker,
+  onNewMemory,
   onRemoveSticker,
   onTurnComplete,
   onTurnPage,
@@ -224,6 +225,7 @@ export function ScrapbookView({
       clearSelection()
     },
     addScrap: (date, variant) => setModal({ type: 'scrap', date, variant }),
+    newMemory: (date) => onNewMemory(date),
     addSticker: (date) => setModal({ type: 'sticker', date }),
     editScrap: (date, scrap) => setModal({ type: 'scrap', date, scrap }),
     markMilestone: (date, scrap) => setModal({ type: 'milestone', date, scrap }),

@@ -179,7 +179,7 @@ export function EntryView({ actions, labels, model, side, turn, ui }) {
             className="entry-blank-button"
             onClick={(event) => {
               event.stopPropagation()
-              actions.addScrap(model.date, 'text')
+              actions.newMemory(model.date)
             }}
             type="button"
           >
