@@ -574,6 +574,630 @@ button {
 }
 
 
+/* ====== Milestones page ====== */
+/* Cream panel with its own padding (the page sits inside .app-content) */
+.app-content:has(.milestones-page) {
+  padding: 26px 32px 22px;
+  background: #f7f2ea;
+  overflow: hidden;
+}
+
+.milestones-page {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  font-family: Inter, system-ui, sans-serif;
+  color: #141a26;
+}
+
+.milestones-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.milestones-eyebrow {
+  font-size: 14px;
+  color: #5b6577;
+}
+
+.milestones-title {
+  margin: 2px 0 0;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.milestones-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.legend-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 16px;
+  background: #fff;
+  font-size: 13px;
+  color: #3a4356;
+}
+
+.add-milestone-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  margin-left: 4px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 22px;
+  background: #141a26;
+  color: #fff;
+  font: 600 14px Inter, sans-serif;
+  cursor: pointer;
+}
+
+/* --- The tower --- */
+.tower-frame {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+/* scrolls, but without a visible scrollbar */
+.tower {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.tower::-webkit-scrollbar {
+  display: none;
+}
+
+/* margin-top:auto keeps a short tower standing on the ground */
+.tower-content {
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+.tower-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px minmax(0, 1fr);
+  align-items: center;
+  height: 52px;
+}
+
+.tower-side {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tower-side--left {
+  justify-content: flex-end;
+  padding-right: 8px;
+}
+
+.tower-side--right {
+  padding-left: 8px;
+}
+
+.tower-connector {
+  width: 28px;
+  border-top: 2px dashed #cfc5b4;
+}
+
+.tower-date {
+  display: flex;
+  flex-direction: column;
+}
+
+.tower-side--left .tower-date {
+  text-align: right;
+}
+
+.tower-date-day {
+  font-size: 14px;
+  font-weight: 600;
+  color: #141a26;
+}
+
+.tower-date-age {
+  font-size: 12px;
+  color: #5b6577;
+}
+
+.tower-center {
+  display: flex;
+  justify-content: center;
+}
+
+.tower-block {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: var(--block-width);
+  height: 52px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--block-color);
+  box-shadow: inset 0 4px 0 rgba(255, 255, 255, 0.4), inset 0 -6px 0 rgba(0, 0, 0, 0.1);
+  transform: var(--block-transform);
+  font: 600 17px Fredoka, sans-serif;
+  color: #141a26;
+  cursor: pointer;
+}
+
+/* suggestions still to come: an outlined, empty block */
+.tower-block--upcoming {
+  height: 48px;
+  border: 2.5px dashed #9aa4b2;
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: none;
+  color: #3a4356;
+}
+
+.tower-block-badge {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.tower-block-title {
+  flex: 1;
+  text-align: left;
+}
+
+.tower-today {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 40px;
+  padding: 0 40px;
+}
+
+.tower-today-line {
+  flex: 1;
+  border-top: 2px dashed #cfc5b4;
+}
+
+.tower-today-label {
+  padding: 5px 12px;
+  border-radius: 14px;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #3a4356;
+}
+
+.tower-empty {
+  margin: 12px 0;
+  text-align: center;
+  font-size: 14px;
+  color: #5b6577;
+}
+
+.tower-ground {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  height: 34px;
+  padding-top: 4px;
+}
+
+.tower-ground-bar {
+  width: 440px;
+  height: 16px;
+  border-radius: 8px;
+  background: #e3d9c6;
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.06);
+}
+
+.tower-friend {
+  position: absolute;
+  top: -46px;
+  left: 50%;
+  width: 56px;
+  height: 56px;
+  margin-left: 190px;
+  border-radius: 50%;
+  background: #ffb27a;
+  box-shadow: inset 0 -5px 0 rgba(0, 0, 0, 0.08);
+}
+
+.tower-friend-eye {
+  position: absolute;
+  top: 16px;
+  width: 13px;
+  height: 15px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.tower-friend-eye--left { left: 12px; }
+.tower-friend-eye--right { left: 30px; }
+
+.tower-friend-eye span {
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  width: 7px;
+  height: 8px;
+  border-radius: 50%;
+  background: #141a26;
+}
+
+.tower-friend-mouth {
+  position: absolute;
+  top: 36px;
+  left: 21px;
+  width: 14px;
+  height: 7px;
+  border-radius: 0 0 7px 7px;
+  background: #141a26;
+}
+
+/* "more above / below" fades with a scroll button */
+.tower-fade {
+  position: absolute;
+  right: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  height: 80px;
+  pointer-events: none;
+}
+
+.tower-fade--top {
+  top: 0;
+  align-items: flex-start;
+  padding-top: 4px;
+  background: linear-gradient(to bottom, #f7f2ea 20%, rgba(247, 242, 234, 0));
+}
+
+.tower-fade--bottom {
+  bottom: 0;
+  align-items: flex-end;
+  padding-bottom: 4px;
+  background: linear-gradient(to top, #f7f2ea 20%, rgba(247, 242, 234, 0));
+}
+
+.tower-more-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(40, 50, 80, 0.14);
+  font: 600 14px Inter, sans-serif;
+  color: #141a26;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+
+/* ====== Calendar page ====== */
+.app-content:has(.calendar-page) {
+  padding: 22px;
+  background: #f6f8fb;
+  overflow: hidden;
+}
+
+.calendar-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+  font-family: Inter, system-ui, sans-serif;
+  color: #141a26;
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+
+.calendar-title {
+  margin: 0;
+  font-family: Fredoka, sans-serif;
+  font-size: 30px;
+  font-weight: 600;
+}
+
+.calendar-title span {
+  color: #7b8494;
+}
+
+.calendar-nav {
+  display: flex;
+  gap: 10px;
+}
+
+.calendar-nav-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1.5px solid #e1e5ec;
+  border-radius: 50%;
+  background: #fff;
+  color: #141a26;
+  cursor: pointer;
+}
+
+.calendar-body {
+  display: flex;
+  flex: 1;
+  gap: 14px;
+  min-height: 0;
+}
+
+/* --- Month grid --- */
+.calendar-card {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 18px 16px 12px;
+  border-radius: 24px;
+  background: #fff;
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  padding: 0 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #7b8494;
+}
+
+.calendar-weekdays span {
+  padding: 0 8px;
+}
+
+.calendar-grid {
+  display: grid;
+  flex: 1;
+  grid-auto-rows: 1fr;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  min-height: 0;
+}
+
+.calendar-day {
+  position: relative;
+  display: block;
+  padding: 10px;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  background: transparent;
+  font: 700 13px Inter, sans-serif;
+  text-align: left;
+  color: #141a26;
+  cursor: pointer;
+}
+
+.calendar-day:disabled {
+  cursor: default;
+}
+
+.calendar-day--outside {
+  font-weight: 500;
+  color: #b4bac6;
+}
+
+.calendar-day--has-entry { background: #f3f1ea; }
+.calendar-day--happy { background: #fff1c4; }
+.calendar-day--silly { background: #ffe0f2; }
+.calendar-day--calm { background: #e3f0ff; }
+.calendar-day--sleepy { background: #ece6ff; }
+
+/* today gets a dark outline */
+.calendar-day--today {
+  border-color: #141a26;
+}
+
+.calendar-day--selected {
+  border-color: #f4908a;
+  background: #ffebe5;
+}
+
+.calendar-legend {
+  margin: 0;
+  text-align: right;
+  font-size: 11px;
+  color: #7b8494;
+}
+
+/* --- Right column --- */
+.calendar-side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 262px;
+  flex-shrink: 0;
+}
+
+.summary-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-height: 118px;
+  padding: 16px 18px;
+  overflow: hidden;
+  border-radius: 22px;
+  background: linear-gradient(135deg, #ffe46b 0%, #ffd23f 100%);
+}
+
+.summary-card-sticker {
+  position: absolute;
+  top: -6px;
+  right: -14px;
+  width: 112px;
+  pointer-events: none;
+}
+
+.summary-card-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(20, 26, 38, 0.65);
+}
+
+.summary-card-title {
+  max-width: 140px;
+  font-family: Fredoka, sans-serif;
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.summary-card-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+  padding: 7px 14px;
+  border: 0;
+  border-radius: 16px;
+  background: #fff;
+  font: 600 12px Inter, sans-serif;
+  color: #141a26;
+  cursor: pointer;
+}
+
+.day-card {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  padding: 18px 16px 16px;
+  border-radius: 22px;
+  background: #fff;
+}
+
+.day-card-weekday {
+  font-size: 12px;
+  color: #7b8494;
+}
+
+.day-card-date {
+  margin: 0 0 12px;
+  font-family: Fredoka, sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.day-card-empty {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #7b8494;
+}
+
+.day-scraps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.day-scrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 14px;
+  background: #f6f8fb;
+  text-align: left;
+  color: #141a26;
+  cursor: pointer;
+}
+
+.day-scrap-swatch {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+}
+
+.day-scrap-swatch--memory { background: #dcecff; }
+.day-scrap-swatch--activity { background: #ffe3c2; }
+.day-scrap-swatch--interaction { background: #e9ddff; }
+.day-scrap-swatch--milestone { background: #ffe0d6; }
+
+.day-scrap-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.day-scrap-text small {
+  font-size: 10px;
+  font-weight: 600;
+  color: #7b8494;
+}
+
+.day-scrap-text strong {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.view-entry-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  margin-top: auto;
+  border: 0;
+  border-radius: 22px;
+  background: #141a26;
+  font: 600 14px Inter, sans-serif;
+  color: #fff;
+  cursor: pointer;
+}
+
+
+
 /* ====== Scrapbook page ====== */
 /* Cream panel with its own padding (the page sits inside .app-content) */
 .app-content:has(.scrapbook-page) {

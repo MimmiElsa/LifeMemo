@@ -78,7 +78,7 @@ function IdeaModal({ idea, labels, onAnother, onClose }) {
   )
 }
 
-export function ScrapbookView({ model }) {
+export function ScrapbookView({ model, onOpenBook }) {
   const { cover, spread, ideaPocket } = model
   const [topPolaroid, lowerPolaroid] = cover.polaroids
   // The pocket starts closed: no idea is chosen until a card is tapped
@@ -172,7 +172,7 @@ export function ScrapbookView({ model }) {
               <path d="M28 26l8 4 3-9" fill="none" stroke="#FFFFFF" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3.5" />
             </svg>
           </div>
-          <button aria-label={cover.openAriaLabel} className="open-corner" type="button">
+          <button aria-label={cover.openAriaLabel} className="open-corner" onClick={onOpenBook} type="button">
             <span aria-hidden="true" className="open-corner-glow" />
             <span aria-hidden="true" className="open-corner-peel">
               <span className="open-corner-paper" />

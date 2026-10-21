@@ -39,6 +39,18 @@ const paths = {
       <path d="m16 16 4 4" />
     </>
   ),
+  blocks: (
+    <>
+      <rect x="4" y="13" width="7" height="7" rx="1.5" />
+      <rect x="13" y="13" width="7" height="7" rx="1.5" />
+      <rect x="8.5" y="4" width="7" height="7" rx="1.5" />
+    </>
+  ),
+  'chevron-left': <path d="m15 6-6 6 6 6" />,
+  'chevron-right': <path d="m9 6 6 6-6 6" />,
+  'arrow-right': <path d="M5 12h14M13 6l6 6-6 6" />,
+  'chevron-up': <path d="m6 15 6-6 6 6" />,
+  'chevron-down': <path d="m6 9 6 6 6-6" />,
   star: <path d="M12 4l2.5 5 5.5.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.5-.8z" />,
   settings: (
     <>
