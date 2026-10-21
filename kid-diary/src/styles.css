@@ -1937,7 +1937,9 @@ button {
   flex-direction: column;
   gap: 22px;
   min-height: 0;
-  padding: 8px 4px;
+  /* room on the left for the up/down buttons, which sit outside the scraps */
+  margin-left: -30px;
+  padding: 8px 4px 8px 34px;
   overflow-y: auto;
   scrollbar-width: none;
 }
@@ -1964,35 +1966,6 @@ button {
   width: 100%;
   max-height: 210px;
   object-fit: cover;
-}
-
-.scrap-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 6px 2px 8px;
-}
-
-.scrap-name {
-  overflow: hidden;
-  font-family: Caveat, cursive;
-  font-size: 20px;
-  font-weight: 700;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: #2e2a26;
-}
-
-.scrap-delete {
-  flex-shrink: 0;
-  padding: 4px 10px;
-  border: 1.5px solid #d9d1c3;
-  border-radius: 12px;
-  background: #fff;
-  font: 600 11px Inter, sans-serif;
-  color: #5b6577;
-  cursor: pointer;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2441,4 +2414,435 @@ button {
   margin: 0;
   font-size: 14px;
   color: #5b6577;
+}
+
+/* ====== Editing a page: tapping scraps, the edit button, stickers ====== */
+.scrap-slot {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.scrap {
+  cursor: pointer;
+  transition: outline-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* the tilt now belongs to the slot, because each scrap sits in its own slot */
+.scrap-slot:nth-child(even) > .scrap {
+  transform: rotate(1.2deg);
+}
+
+.scrap-slot:nth-child(even) > .scrap--text {
+  transform: rotate(0.8deg);
+}
+
+/* a photo or video scrap: a polaroid with its words underneath */
+.scrap--media {
+  padding: 8px 8px 12px;
+}
+
+.scrap--media .scrap-label {
+  margin-top: 8px;
+}
+
+.scrap--media p {
+  margin: 0;
+  font-family: Caveat, cursive;
+  font-size: 22px;
+  line-height: 1.1;
+  color: #2e2a26;
+}
+
+/* the scrap that was tapped: a stroke around it, and its three choices */
+.scrap--selected {
+  outline: 3px solid #3d7be0;
+  outline-offset: 3px;
+}
+
+.scrap-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-top: 10px;
+  padding: 6px;
+  border: 2px solid #3d7be0;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 18px rgba(40, 50, 80, 0.18);
+}
+
+.scrap-menu-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  font: 600 12px Inter, sans-serif;
+  color: #141a26;
+  cursor: pointer;
+}
+
+.scrap-menu-button:hover {
+  background: #eef4ff;
+}
+
+.scrap-menu-button--danger {
+  color: #c2412d;
+}
+
+.scrap-menu-button--danger:hover {
+  background: #ffeeea;
+}
+
+.scrap-menu-question {
+  padding: 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #5b6577;
+}
+
+/* move a scrap up or down (while editing) */
+.scrap-mover {
+  position: absolute;
+  top: 50%;
+  left: -28px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transform: translateY(-50%);
+}
+
+.scrap-mover button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1.5px solid #d9d1c3;
+  border-radius: 50%;
+  background: #fff;
+  color: #141a26;
+  cursor: pointer;
+}
+
+.scrap-mover button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* the edit button of a page, and what it brings */
+.entry-header {
+  display: flex;
+  align-items: flex-start;
+}
+
+/* stickers stuck on the open pages (the layer covers both pages) */
+.sticker-layer {
+  position: absolute;
+  top: 0;
+  left: -450px;
+  z-index: 4;
+  width: 900px;
+  height: 100%;
+  pointer-events: none;
+}
+
+.page-sticker {
+  position: absolute;
+  touch-action: none;
+  user-select: none;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2));
+}
+
+.page-sticker--editing {
+  cursor: grab;
+  pointer-events: auto;
+  border-radius: 14px;
+  outline: 2px dashed #3d7be0;
+  outline-offset: 4px;
+}
+
+.page-sticker.is-dragging {
+  z-index: 5;
+  cursor: grabbing;
+}
+
+.page-sticker-remove {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #141a26;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* forms in a popup (add or edit a scrap, a milestone, a sticker) */
+.form-modal {
+  align-items: stretch;
+  width: 480px;
+  text-align: left;
+}
+
+.form-modal h2 {
+  margin: 0 0 14px;
+  padding-right: 40px;
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #3a4356;
+}
+
+.modal-field input[type='text'],
+.modal-field textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #d9d1c3;
+  border-radius: 12px;
+  background: #fff;
+  font: 400 15px Inter, sans-serif;
+  color: #141a26;
+  resize: none;
+}
+
+.modal-field input[type='file'] {
+  font: 400 13px Inter, sans-serif;
+}
+
+.modal-chips {
+  display: flex;
+  gap: 8px;
+}
+
+.modal-chip {
+  padding: 8px 14px;
+  border: 1.5px solid #d9d1c3;
+  border-radius: 18px;
+  background: #fff;
+  font: 600 13px Inter, sans-serif;
+  color: #141a26;
+  cursor: pointer;
+}
+
+.modal-chip.is-selected {
+  border-color: #141a26;
+  background: #141a26;
+  color: #fff;
+}
+
+.modal-colors {
+  display: flex;
+  gap: 10px;
+}
+
+.modal-color {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.5px #d9d1c3;
+  cursor: pointer;
+}
+
+.modal-color.is-selected {
+  box-shadow: 0 0 0 3px #141a26;
+}
+
+.form-modal .idea-actions {
+  margin-top: 4px;
+}
+
+.form-modal .dark-pill-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.sticker-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+.sticker-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 4px 8px;
+  border: 1.5px solid #ece5d6;
+  border-radius: 14px;
+  background: #fff;
+  font: 600 11px Inter, sans-serif;
+  color: #3a4356;
+  cursor: pointer;
+}
+
+.sticker-choice:hover {
+  border-color: #3d7be0;
+  background: #eef4ff;
+}
+
+/* The edit bar: floats just under the book, half over its bottom edge, so it takes no room on the pages */
+.edit-bar {
+  position: absolute;
+  top: calc(100% - 20px);
+  left: -450px;
+  z-index: 6;
+  display: flex;
+  justify-content: center;
+  width: 900px;
+  pointer-events: none;
+}
+
+/* ====== Each page of the book is its own entry ====== */
+/* room at the bottom of every page for the edit bar, so it never covers a scrap */
+.entry-page {
+  padding-bottom: 76px;
+}
+
+.entry-header {
+  align-items: center;
+}
+
+.entry-header h2 {
+  font-size: 22px;
+}
+
+/* the edit button of one entry */
+.entry-edit-button {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 1.5px solid #d9d1c3;
+  border-radius: 16px;
+  background: #fff;
+  font: 600 12px Inter, sans-serif;
+  color: #141a26;
+  cursor: pointer;
+}
+
+.entry-edit-button.is-active {
+  border-color: #141a26;
+  background: #141a26;
+  color: #fff;
+}
+
+/* the stickers of one page sit on top of it */
+.sticker-layer {
+  inset: 0;
+  left: 0;
+  z-index: 2;
+  width: auto;
+  height: auto;
+}
+
+/* the edit bar: tools with a coloured tile and a name under it, floating under the book */
+.edit-bar {
+  top: calc(100% - 58px);
+}
+
+.edit-bar-tools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  pointer-events: auto;
+  padding: 8px 14px;
+  border-radius: 30px;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(20, 26, 38, 0.22);
+}
+
+.edit-tool {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 68px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.edit-tool:hover:not(:disabled) {
+  background: #eef0f4;
+}
+
+.edit-tool:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.edit-tool-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 36px;
+  border-radius: 12px;
+  color: #141a26;
+}
+
+.edit-tool-tile--text { background: #e6edf5; }
+.edit-tool-tile--stickers { background: #fff0c2; }
+.edit-tool-tile--photo { background: #ffe3dc; }
+.edit-tool-tile--audio { background: #ffe0f2; }
+
+.edit-tool-name {
+  font: 700 12px Inter, sans-serif;
+  color: #141a26;
+}
+
+.edit-bar-divider {
+  width: 1px;
+  height: 40px;
+  margin: 0 8px;
+  background: #e5e0d4;
+}
+
+.edit-bar-done {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 20px;
+  background: #141a26;
+  font: 600 13px Inter, sans-serif;
+  color: #fff;
+  cursor: pointer;
 }

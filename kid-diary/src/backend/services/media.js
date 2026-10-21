@@ -32,6 +32,11 @@ export async function saveVideo({ scrapId, file }) {
 	return video
 }
 
+// Any photo or video by id (or undefined)
+export async function loadMedia(id) {
+	return get('media', id)
+}
+
 export async function loadPhoto(id) {
 	const photo = await get('media', id)
 	return photo?.kind === 'photo' ? photo : undefined

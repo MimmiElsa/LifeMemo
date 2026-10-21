@@ -7,56 +7,54 @@ const MONTHS = [
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 const KIND_LABELS = { activity: 'Activity', interaction: 'Interaction', memory: 'Memory' }
 
+// The colours a milestone block can have in the tower
+const MILESTONE_COLORS = ['#FFD84D', '#8EC5FF', '#8FDDA9', '#FFB27A', '#FF9FCB', '#C3B1FF']
+
 // "2026-10-04" -> local Date (new Date("2026-10-04") would be read as UTC)
 function parseDayKey(dayKey) {
   const [year, month, day] = dayKey.split('-').map(Number)
   return new Date(year, month - 1, day)
 }
 
-// An entry is the page of one day; the items on it are scraps.
+// One entry: the scrapbook page of one day. The items on it are scraps.
 //   date:              the day of the entry, as a day key
-//   storedScraps:      the entry's scraps from the store (the text scraps are shown from here)
-//   uploads:           photos and videos added this session (shown on today's page)
-//   milestoneScrapIds: scraps that a milestone marks
+//   page:              { entry, scraps } from the store, or null if the day has no page yet
+//   media:             the photos and videos of the scraps, by media id (with an address to show them)
+//   milestones:        the child's milestones, to see which scraps mark one
 //   highlightScrapId:  the scrap to point out (e.g. when arriving from a milestone)
-//   neighbours:        the days before and after this one, for the page-turning corners
-// The open book shows two facing pages, so the scraps are shared between them:
-// the 1st, 3rd, ... go on the left page and the 2nd, 4th, ... on the right.
+//   loaded:            false while the page is still being read
 export function presentEntry({
-  date = toDayKey(),
-  storedScraps = [],
-  uploads = [],
-  milestoneScrapIds = [],
+  date,
+  page = null,
+  media = {},
+  milestones = [],
   highlightScrapId = null,
-  neighbours = { previous: null, next: null },
   loaded = true,
-} = {}) {
+}) {
   const day = parseDayKey(date)
   const isToday = date === toDayKey()
-  const milestoneIds = new Set(milestoneScrapIds)
+  const milestoneByScrapId = new Map(milestones.filter((m) => m.scrapId).map((m) => [m.scrapId, m]))
+  const scraps = page?.scraps ?? []
 
-  // Scraps that hold a photo or video are shown from `uploads`, so only text scraps come from the store.
-  const textScraps = storedScraps
-    .filter((scrap) => scrap.mediaIds.length === 0)
-    .map((scrap) => ({
+  const items = scraps.map((scrap, index) => {
+    const milestone = milestoneByScrapId.get(scrap.id)
+    return {
       id: scrap.id,
-      type: 'text',
       kind: scrap.kind,
-      label: milestoneIds.has(scrap.id) ? 'Milestone' : KIND_LABELS[scrap.kind],
+      label: milestone ? 'Milestone' : KIND_LABELS[scrap.kind],
       text: scrap.text,
-      isMilestone: milestoneIds.has(scrap.id),
+      media: scrap.mediaIds.map((id) => media[id]).filter(Boolean),
+      isMilestone: Boolean(milestone),
+      milestoneTitle: milestone?.title ?? null,
       isHighlighted: scrap.id === highlightScrapId,
-    }))
-
-  const mediaScraps = (isToday ? uploads : []).map((upload) => ({
-    ...upload,
-    type: 'media',
-    deleteLabel: `Delete ${upload.kind}`,
-  }))
-
-  const items = [...textScraps, ...mediaScraps]
+      canMoveUp: index > 0,
+      canMoveDown: index < scraps.length - 1,
+    }
+  })
 
   return {
+    date,
+    entryId: page?.entry.id ?? null,
     dateLabel: `${WEEKDAYS[day.getDay()]}, ${day.getDate()} ${MONTHS[day.getMonth()]} ${day.getFullYear()}`,
     blank: {
       title: isToday ? "Today's page is still blank" : 'This page is still blank',
@@ -64,11 +62,39 @@ export function presentEntry({
       addLabel: 'Add a memory',
     },
     isEmpty: loaded && items.length === 0,
+    scraps: items,
+    stickers: (page?.entry.stickers ?? []).map((sticker) => ({ ...sticker })),
+  }
+}
+
+// The open book: two entries side by side (the left page and the right page), what the
+// corners turn to, and the words and choices shared by the pages.
+//   left, right:           the entries from presentEntry (right is null when there is no page)
+//   previousDate, nextDate: the day shown on the left page after turning back / forward (or null)
+export function presentSpread({ left, right = null, previousDate = null, nextDate = null }) {
+  return {
+    left,
+    right,
     turn: {
-      previous: { label: 'Previous page', date: neighbours.previous },
-      next: { label: 'Next page', date: neighbours.next },
+      previous: { label: 'Previous page', date: previousDate },
+      next: { label: 'Next page', date: nextDate },
     },
-    leftScraps: items.filter((_, index) => index % 2 === 0),
-    rightScraps: items.filter((_, index) => index % 2 === 1),
+    labels: {
+      editEntry: 'Edit entry',
+      editing: 'Editing',
+      done: 'Done',
+      tools: { text: 'Text', stickers: 'Stickers', photo: 'Photo', audio: 'Audio', audioSoon: 'Coming soon' },
+      addToMilestone: 'Add to milestone',
+      removeFromMilestones: 'Remove from milestones',
+      editScrap: 'Edit scrap',
+      deleteScrap: 'Delete scrap',
+      confirmDelete: 'Delete it?',
+      keep: 'Keep',
+      moveUp: 'Move up',
+      moveDown: 'Move down',
+      removeSticker: 'Remove sticker',
+    },
+    milestoneColors: MILESTONE_COLORS,
+    kinds: Object.entries(KIND_LABELS).map(([id, label]) => ({ id, label })),
   }
 }

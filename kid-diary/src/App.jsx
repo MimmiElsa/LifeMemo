@@ -1,18 +1,23 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   addScrap,
+  addSticker,
   attachMediaToScrap,
-  deletePhoto,
-  deleteVideo,
+  deleteScrap,
+  moveScrap,
+  moveSticker,
   recordPhoto,
   recordVideo,
+  removeSticker,
   savePhoto,
   saveVideo,
+  updateScrap,
 } from './backend/index.js'
+import { createMilestone } from './backend/models.js'
 import { LUCAS_DEMO, seedDemoData } from './backend/demoData.js'
 import { toDayKey } from './backend/utils/dates.js'
 import { useCalendar } from './hooks/useCalendar.js'
-import { useEntryDay } from './hooks/useEntryDay.js'
+import { useEntryPage, usePageDates } from './hooks/useEntryPage.js'
 import { useMonthlySummary } from './hooks/useMonthlySummary.js'
 import { getNavigationItems, presentSideNavigation } from './presenters/appPresenter.js'
 import { presentStartPage } from './presenters/startPagePresenter.js'
@@ -20,7 +25,7 @@ import { presentCalendar } from './presenters/calendarPresenter.js'
 import { presentFolderPicker } from './presenters/folderPickerPresenter.js'
 import { presentMilestones } from './presenters/milestonesPresenter.js'
 import { presentNewMemory } from './presenters/newMemoryPresenter.js'
-import { presentEntry } from './presenters/entryPresenter.js'
+import { presentEntry, presentSpread } from './presenters/entryPresenter.js'
 import { presentScrapbook } from './presenters/scrapbookPresenter.js'
 import { presentSummary } from './presenters/summaryPresenter.js'
 import { presentWelcome } from './presenters/welcomePresenter.js'
@@ -36,18 +41,35 @@ import { StartPageView } from './views/StartPageView.jsx'
 import { SummaryView } from './views/SummaryView.jsx'
 import { WelcomeView } from './views/WelcomeView.jsx'
 
+// The book shows two entries (pages of days) side by side. The pages come one after the other
+// in time, and the spread that holds `date` is shown: pages 1+2, pages 3+4, and so on.
+// `pageDates` are the days that have a page, oldest first.
+function spreadAround(date, pageDates) {
+  const index = pageDates.indexOf(date)
+  if (index === -1) return { leftDate: date, rightDate: null, previousDate: null, nextDate: null }
+
+  const leftIndex = index - (index % 2)
+  return {
+    leftDate: pageDates[leftIndex],
+    rightDate: pageDates[leftIndex + 1] ?? null,
+    previousDate: pageDates[leftIndex - 2] ?? null,
+    nextDate: pageDates[leftIndex + 2] ?? null,
+  }
+}
+
 function App() {
   const navigationItems = getNavigationItems()
   const [stage, setStage] = useState('welcome')
   const [children, setChildren] = useState([LUCAS_DEMO])
   const [activeChildId, setActiveChildId] = useState(null)
   const [activeRoute, setActiveRoute] = useState('home')
-  const [scraps, setScraps] = useState([])
+  // a number that goes up whenever something in the store changed, so the pages are read again
+  const [dataVersion, setDataVersion] = useState(0)
   const [scrapbookInitiallyOpen, setScrapbookInitiallyOpen] = useState(false)
   // which day's entry the scrapbook shows, and the scrap to point out on it
   const [entryDate, setEntryDate] = useState(() => toDayKey())
   const [highlightScrapId, setHighlightScrapId] = useState(null)
-  // a page turn in progress: { date, direction: 'next' | 'previous', details, neighbours }
+  // a page turn in progress: { direction: 'next' | 'previous', leftDate, rightDate, leftResult, rightResult }
   const [turn, setTurn] = useState(null)
   // the month the summary page looks back at, and a counter that picks new random scraps
   const [summaryMonth, setSummaryMonth] = useState(() => ({
@@ -68,7 +90,11 @@ function App() {
     children.find((c) => c.id === activeChildId)?.milestones,
     summaryShuffle,
   )
-  const entryDay = useEntryDay(activeChildId, entryDate, activeRoute === 'scrapbook', scraps.length)
+  const scrapbookShowing = activeRoute === 'scrapbook'
+  const pageDates = usePageDates(activeChildId, scrapbookShowing, dataVersion)
+  const spread = spreadAround(entryDate, pageDates)
+  const leftPage = useEntryPage(activeChildId, spread.leftDate, scrapbookShowing, dataVersion)
+  const rightPage = useEntryPage(activeChildId, spread.rightDate, scrapbookShowing, dataVersion)
 
   // put Lucas's demo days in the store, so the calendar has something to show
   useEffect(() => {
@@ -83,7 +109,7 @@ function App() {
       ? await savePhoto({ scrapId: scrap.id, file })
       : await saveVideo({ scrapId: scrap.id, file })
     await attachMediaToScrap(scrap.id, media.id)
-    setScraps((current) => [...current, { ...media, url: URL.createObjectURL(file) }])
+    refreshData()
     setStatus(`${kind === 'photo' ? 'Photo' : 'Video'} added.`)
   }
 
@@ -152,51 +178,164 @@ function App() {
     setActiveRoute('scrapbook')
   }
 
-  // The scrapbook opens on its cover. Opening the book shows the day's entry as facing pages,
-  // on the same screen, so browsing never loads another page.
-  // The model for one day's entry (the two facing pages)
-  function buildEntryModel(date, page, loaded) {
+  // The model of one entry (one page of the book)
+  function buildPage(date, result, loaded) {
     return presentEntry({
       date,
-      storedScraps: page.details?.scraps ?? [],
-      neighbours: page.neighbours,
-      uploads: scraps,
-      milestoneScrapIds: (activeChild?.milestones ?? []).map((m) => m.scrapId).filter(Boolean),
+      page: result.page,
+      media: result.media,
+      milestones: activeChild?.milestones ?? [],
       highlightScrapId,
       loaded,
     })
   }
 
-  // Turning a page: read the page we are turning to first, then show the leaf turning
-  async function turnPage(date) {
+  // Turning the page: read the two entries we are turning to first, then show the leaf turning
+  async function turnPage(newLeftDate) {
     if (turn) return
-    const page = await entryDay.load(date)
+    const next = spreadAround(newLeftDate, pageDates)
+    const [leftResult, rightResult] = await Promise.all([
+      leftPage.load(next.leftDate),
+      next.rightDate ? rightPage.load(next.rightDate) : Promise.resolve({ page: null, media: {} }),
+    ])
     setTurn({
-      date,
-      direction: date > entryDate ? 'next' : 'previous',
-      details: page.details,
-      neighbours: page.neighbours,
+      direction: newLeftDate > spread.leftDate ? 'next' : 'previous',
+      leftDate: next.leftDate,
+      rightDate: next.rightDate,
+      leftResult,
+      rightResult,
     })
+  }
+
+  function refreshData() {
+    setDataVersion((version) => version + 1)
+  }
+
+  // Add a scrap (and its photo or video, if one was picked) to an entry
+  async function addScrapToPage(date, { kind, text, file }) {
+    const scrap = await addScrap({ childId: activeChildId, date, kind, text })
+    if (file) {
+      const media = file.type.startsWith('video/')
+        ? await saveVideo({ scrapId: scrap.id, file })
+        : await savePhoto({ scrapId: scrap.id, file })
+      await attachMediaToScrap(scrap.id, media.id)
+    }
+    refreshData()
+  }
+
+  async function changeScrap(scrapId, fields) {
+    await updateScrap(scrapId, fields)
+    refreshData()
+  }
+
+  async function shiftScrap(scrapId, direction) {
+    await moveScrap(scrapId, direction)
+    refreshData()
+  }
+
+  // The milestones are kept with the child for now, so they are changed here
+  function changeActiveChildMilestones(change) {
+    setChildren((current) =>
+      current.map((child) =>
+        child.id === activeChildId ? { ...child, milestones: change(child.milestones) } : child,
+      ),
+    )
+  }
+
+  function markScrapAsMilestone(date, scrap, { title, color }) {
+    changeActiveChildMilestones((milestones) => [
+      ...milestones,
+      createMilestone({
+        childId: activeChildId,
+        title,
+        date,
+        scrapId: scrap.id,
+        source: 'user',
+        color,
+      }),
+    ])
+  }
+
+  // A milestone the family made is removed; a suggested one only loses its scrap
+  function unmarkScrapAsMilestone(scrap) {
+    changeActiveChildMilestones((milestones) =>
+      milestones.flatMap((milestone) => {
+        if (milestone.scrapId !== scrap.id) return [milestone]
+        return milestone.source === 'user' ? [] : [{ ...milestone, scrapId: null }]
+      }),
+    )
+  }
+
+  async function removeScrap(scrap) {
+    await deleteScrap(scrap.id)
+    unmarkScrapAsMilestone(scrap)
+    refreshData()
+  }
+
+  async function stickOnPage(date, stickerId) {
+    // lands near the middle of the page, a little crooked
+    await addSticker({
+      childId: activeChildId,
+      date,
+      sticker: stickerId,
+      x: 30 + Math.random() * 40,
+      y: 35 + Math.random() * 30,
+      rotation: Math.round(Math.random() * 30 - 15),
+    })
+    refreshData()
+  }
+
+  async function shiftSticker(entryId, stickerId, x, y) {
+    await moveSticker(entryId, stickerId, { x, y })
+    refreshData()
+  }
+
+  async function takeStickerOff(entryId, stickerId) {
+    await removeSticker(entryId, stickerId)
+    refreshData()
   }
 
   function completeTurn() {
     if (!turn) return
-    setEntryDate(turn.date)
+    setEntryDate(turn.leftDate)
     setHighlightScrapId(null)
     setTurn(null)
   }
 
+  // The scrapbook opens on its cover. Opening the book shows two entries side by side,
+  // on the same screen, so browsing never loads another page.
   function renderScrapbook() {
+    const bookSpread = presentSpread({
+      left: buildPage(spread.leftDate, leftPage, leftPage.loaded),
+      right: spread.rightDate ? buildPage(spread.rightDate, rightPage, rightPage.loaded) : null,
+      previousDate: spread.previousDate,
+      nextDate: spread.nextDate,
+    })
+
     return (
       <ScrapbookView
-        entryModel={buildEntryModel(entryDate, entryDay, entryDay.loaded)}
         initiallyOpen={scrapbookInitiallyOpen}
         model={presentScrapbook({ child: activeChild })}
-        onAddMemory={() => setActiveRoute('newMemory')}
-        onDeleteScrap={deleteScrap}
+        onAddScrap={addScrapToPage}
+        onAddSticker={stickOnPage}
+        onDeleteScrap={removeScrap}
+        onMarkMilestone={markScrapAsMilestone}
+        onMoveScrap={shiftScrap}
+        onMoveSticker={shiftSticker}
+        onRemoveSticker={takeStickerOff}
         onTurnComplete={completeTurn}
         onTurnPage={turnPage}
-        turn={turn && { direction: turn.direction, model: buildEntryModel(turn.date, turn, true) }}
+        onUnmarkMilestone={unmarkScrapAsMilestone}
+        onUpdateScrap={changeScrap}
+        spread={bookSpread}
+        turn={
+          turn && {
+            direction: turn.direction,
+            leftDate: turn.leftDate,
+            left: buildPage(turn.leftDate, turn.leftResult, true),
+            right: turn.rightDate ? buildPage(turn.rightDate, turn.rightResult, true) : null,
+          }
+        }
       />
     )
   }
@@ -220,13 +359,6 @@ function App() {
       setRecording(false)
     }
     await addMedia(file, kind)
-  }
-
-  async function deleteScrap(scrap) {
-    if (scrap.kind === 'photo') await deletePhoto(scrap.id)
-    else await deleteVideo(scrap.id)
-    URL.revokeObjectURL(scrap.url)
-    setScraps((current) => current.filter((item) => item.id !== scrap.id))
   }
 
   if (stage === 'welcome') {
