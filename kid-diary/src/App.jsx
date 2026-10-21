@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   addScrap,
   attachMediaToScrap,
@@ -9,16 +9,19 @@ import {
   savePhoto,
   saveVideo,
 } from './backend/index.js'
+import { LUCAS_DEMO, seedDemoData } from './backend/demoData.js'
 import { toDayKey } from './backend/utils/dates.js'
+import { useCalendar } from './hooks/useCalendar.js'
 import { getNavigationItems, presentSideNavigation } from './presenters/appPresenter.js'
 import { presentStartPage } from './presenters/startPagePresenter.js'
+import { presentCalendar } from './presenters/calendarPresenter.js'
 import { presentFolderPicker } from './presenters/folderPickerPresenter.js'
 import { presentMilestones } from './presenters/milestonesPresenter.js'
 import { presentNewMemory } from './presenters/newMemoryPresenter.js'
 import { presentScrapbook } from './presenters/scrapbookPresenter.js'
 import { presentWelcome } from './presenters/welcomePresenter.js'
-import { createSampleMilestones, LUCAS_BIRTHDAY } from './backend/sampleMilestones.js'
 import { AppShell } from './views/AppShell.jsx'
+import { CalendarView } from './views/CalendarView.jsx'
 import { FolderPickerView } from './views/FolderPickerView.jsx'
 import { MilestonesView } from './views/MilestonesView.jsx'
 import { NewMemoryView } from './views/NewMemoryView.jsx'
@@ -30,14 +33,7 @@ import { WelcomeView } from './views/WelcomeView.jsx'
 function App() {
   const navigationItems = getNavigationItems()
   const [stage, setStage] = useState('welcome')
-  const [children, setChildren] = useState([
-    {
-      id: 'child-lucas',
-      name: 'Lucas',
-      birthday: LUCAS_BIRTHDAY,
-      milestones: createSampleMilestones('child-lucas').milestones,
-    },
-  ])
+  const [children, setChildren] = useState([LUCAS_DEMO])
   const [activeChildId, setActiveChildId] = useState(null)
   const [activeRoute, setActiveRoute] = useState('home')
   const [memories, setMemories] = useState([])
@@ -45,6 +41,12 @@ function App() {
   const [busy, setBusy] = useState(false)
   const [recording, setRecording] = useState(false)
   const videoStopRef = useRef(null)
+  const calendar = useCalendar(activeChildId, activeRoute === 'calendar')
+
+  // put Lucas's demo days in the store, so the calendar has something to show
+  useEffect(() => {
+    seedDemoData()
+  }, [])
 
   async function addMedia(file, kind) {
     if (!file || !activeChildId) return
@@ -82,6 +84,30 @@ function App() {
             runMediaAction(() => addRecordedMedia('video'))
           }
         }}
+      />
+    )
+  }
+
+  function renderCalendar() {
+    const child = children.find((c) => c.id === activeChildId)
+    const milestoneScrapIds = (child?.milestones ?? []).map((m) => m.scrapId).filter(Boolean)
+
+    return (
+      <CalendarView
+        model={presentCalendar({
+          child,
+          year: calendar.year,
+          month: calendar.month,
+          days: calendar.days,
+          selectedDate: calendar.selectedDate,
+          details: calendar.details,
+          milestoneScrapIds,
+        })}
+        onNextMonth={calendar.showNextMonth}
+        onOpenSummary={() => {}}
+        onPreviousMonth={calendar.showPreviousMonth}
+        onSelectDate={calendar.selectDate}
+        onViewEntry={() => setActiveRoute('scrapbook')}
       />
     )
   }
@@ -150,6 +176,8 @@ function App() {
     page = renderNewMemory()
   } else if (activeRoute === 'scrapbook') {
     page = renderScrapbook()
+  } else if (activeRoute === 'calendar') {
+    page = renderCalendar()
   }
 
   return (
