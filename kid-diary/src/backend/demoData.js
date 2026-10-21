@@ -1,5 +1,6 @@
 // Demo data for the exhibition: Lucas already has a tower and some scrapbook days.
 // Replace with real saved data once children and milestones are stored too.
+import lucasPhoto from '../../assets/img/lucas-child.png'
 import { createEntry, createMilestone, createScrap, createScrapbook } from './models.js'
 import { createSampleMilestones, LUCAS_BIRTHDAY } from './sampleMilestones.js'
 import { put } from './store.js'
@@ -61,6 +62,8 @@ export const LUCAS_DEMO = {
   id: LUCAS_ID,
   name: 'Lucas',
   birthday: LUCAS_BIRTHDAY,
+  // the picture on his folder, in the side menu and in Settings
+  photo: lucasPhoto,
   milestones: [...sample.milestones, ...recent.milestones],
   scrapbook: createScrapbook(),
 }

@@ -45,18 +45,22 @@ export function FolderPickerView({ model, onSelectFolder, onAddFolder, onBack })
         <li className="folder-item">
           {isAdding ? (
             <form className="folder-tile folder-tile--add folder-add-form" onSubmit={handleSubmit}>
-              <label>
-                {model.nameLabel}
+              <label className="folder-add-field">
+                <span>{model.nameLabel}</span>
                 <input
                   autoFocus
+                  maxLength={30}
                   onChange={(event) => setName(event.target.value)}
+                  placeholder={model.namePlaceholder}
                   type="text"
                   value={name}
                 />
               </label>
               <div className="folder-add-actions">
-                <button type="submit">{model.saveLabel}</button>
-                <button onClick={() => setIsAdding(false)} type="button">
+                <button className="folder-add-save" disabled={!name.trim()} type="submit">
+                  {model.saveLabel}
+                </button>
+                <button className="folder-add-cancel" onClick={() => setIsAdding(false)} type="button">
                   {model.cancelLabel}
                 </button>
               </div>

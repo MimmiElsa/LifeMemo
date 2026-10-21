@@ -291,20 +291,86 @@ button {
 }
 
 .folder-add-form {
+  gap: 14px;
+  padding: 16px;
+  border: 1.5px solid #cfd5de;
+  background: #f7f9fc;
+  color: #25282b;
   cursor: default;
   font-size: 14px;
 }
 
+.folder-add-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  text-align: left;
+}
+
+.folder-add-field span {
+  padding-left: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #5b6577;
+}
+
 .folder-add-form input {
   display: block;
-  width: 130px;
-  margin-top: 4px;
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #cfd5de;
+  border-radius: 14px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+}
+
+.folder-add-form input::placeholder {
+  color: #a3abb8;
+}
+
+.folder-add-form input:focus-visible {
+  border-color: #6ea8f7;
+  outline: 3px solid rgba(110, 168, 247, 0.3);
+  outline-offset: 0;
 }
 
 .folder-add-actions {
   display: flex;
   gap: 8px;
-  margin-top: 8px;
+  width: 100%;
+}
+
+.folder-add-actions button {
+  flex: 1;
+  padding: 9px 0;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s, opacity 0.15s;
+}
+
+.folder-add-save {
+  border: 1.5px solid #25282b;
+  background: #25282b;
+  color: #fff;
+}
+
+.folder-add-save:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.folder-add-cancel {
+  border: 1.5px solid #cfd5de;
+  background: #fff;
+  color: #25282b;
+}
+
+.folder-add-cancel:hover {
+  background: #eef2f8;
 }
 
 .button-primary,
