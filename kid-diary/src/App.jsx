@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import {
   addScrap,
+  getMoodOfDay,
+  setEntryMood,
   addSticker,
   attachMediaToScrap,
   deleteScrap,
@@ -16,7 +18,12 @@ import {
   saveVideo,
   updateScrap,
 } from './backend/index.js'
-import { buildScrapFromAnswers, getMemoryTemplate } from './backend/memoryTemplates.js'
+import {
+  buildScrapFromAnswers,
+  buildScrapFromPrompt,
+  getMemoryTemplate,
+  pickPromptSet,
+} from './backend/memoryTemplates.js'
 import { createMilestone } from './backend/models.js'
 import { LUCAS_DEMO, seedDemoData } from './backend/demoData.js'
 import { toDayKey } from './backend/utils/dates.js'
@@ -28,9 +35,16 @@ import { presentStartPage } from './presenters/startPagePresenter.js'
 import { presentCalendar } from './presenters/calendarPresenter.js'
 import { presentFolderPicker } from './presenters/folderPickerPresenter.js'
 import { presentMilestones } from './presenters/milestonesPresenter.js'
-import { presentNewMemory, presentQuickMemory, presentTemplateForm } from './presenters/newMemoryPresenter.js'
+import {
+  presentNewMemory,
+  presentPromptMemory,
+  presentQuickMemory,
+  presentTemplateForm,
+} from './presenters/newMemoryPresenter.js'
 import { presentEntry, presentSpread } from './presenters/entryPresenter.js'
 import { presentScrapbook } from './presenters/scrapbookPresenter.js'
+import { presentMoodStep } from './presenters/moodPickerPresenter.js'
+import { presentSettings } from './presenters/settingsPresenter.js'
 import { presentSummary } from './presenters/summaryPresenter.js'
 import { presentWelcome } from './presenters/welcomePresenter.js'
 import { createScrapbook } from './backend/models.js'
@@ -41,7 +55,10 @@ import { FolderPickerView } from './views/FolderPickerView.jsx'
 import { MilestonesView } from './views/MilestonesView.jsx'
 import { NewMemoryView } from './views/NewMemoryView.jsx'
 import { PlaceholderPageView } from './views/PlaceholderPageView.jsx'
+import { MoodStepView } from './views/MoodStepView.jsx'
+import { PromptMemoryView } from './views/PromptMemoryView.jsx'
 import { ScrapbookView } from './views/ScrapbookView.jsx'
+import { SettingsView } from './views/SettingsView.jsx'
 import { StartPageView } from './views/StartPageView.jsx'
 import { SummaryView } from './views/SummaryView.jsx'
 import { TemplateFormView } from './views/TemplateFormView.jsx'
@@ -81,6 +98,13 @@ function App() {
   const [children, setChildren] = useState([LUCAS_DEMO])
   const [activeChildId, setActiveChildId] = useState(null)
   const [activeRoute, setActiveRoute] = useState('home')
+  const [theme, setTheme] = useState('light')
+  // the days that were asked how the child feels in this visit, so a day is only asked once
+  const [moodAsked, setMoodAsked] = useState(() => new Set())
+  // how the next screen arrives: 'tab' fades up, 'forward' slides in from the right,
+  // 'back' slides in from the left, 'none' is for a screen that arrives with its stage
+  const [motion, setMotion] = useState('tab')
+  const [stageMotion, setStageMotion] = useState('none')
   // a number that goes up whenever something in the store changed, so the pages are read again
   const [dataVersion, setDataVersion] = useState(0)
   const [scrapbookInitiallyOpen, setScrapbookInitiallyOpen] = useState(false)
@@ -131,6 +155,40 @@ function App() {
     seedDemoData()
   }, [])
 
+  // the stylesheet restyles everything from this attribute
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+  }, [theme])
+
+  function goTo(route, kind = 'forward') {
+    setMotion(kind)
+    setActiveRoute(route)
+  }
+
+  function goToStage(next, kind) {
+    setStageMotion(kind)
+    setStage(next)
+  }
+
+  // Step 1 of a new memory: the colour the child picked is the day's mood, which tints the day in
+  // the calendar.
+  async function saveMoodStep({ mood }) {
+    await setEntryMood(activeChildId, newMemory.date, mood)
+    finishMoodStep()
+  }
+
+  function finishMoodStep() {
+    setMoodAsked((current) => new Set(current).add(newMemory.date))
+    setNewMemory({ ...newMemory, moodStep: false, steps: true })
+    refreshData()
+  }
+
+  function saveChildProfile(fields) {
+    setChildren((current) =>
+      current.map((child) => (child.id === activeChildId ? { ...child, ...fields } : child)),
+    )
+  }
+
   function renderCalendar() {
     const child = children.find((c) => c.id === activeChildId)
     const milestoneScrapIds = (child?.milestones ?? []).map((m) => m.scrapId).filter(Boolean)
@@ -150,7 +208,7 @@ function App() {
         onOpenSummary={() => {
           setSummaryMonth({ year: calendar.year, month: calendar.month })
           setSummaryShuffle((count) => count + 1)
-          setActiveRoute('summary')
+          goTo('summary')
         }}
         onPreviousMonth={calendar.showPreviousMonth}
         onSelectDate={calendar.selectDate}
@@ -167,7 +225,7 @@ function App() {
     setEntryDate(date)
     setHighlightScrapId(scrapId)
     setScrapbookInitiallyOpen(true)
-    setActiveRoute('scrapbook')
+    goTo('scrapbook')
   }
 
   // The model of one entry (one page of the book)
@@ -213,9 +271,18 @@ function App() {
 
   // New memory: first the choice (a blank page or a template), then the template's questions
   // `date` is the day the memory is for: today, or a day picked on the calendar or on a blank page
-  function openNewMemory(templateId = null, date = toDayKey()) {
-    setNewMemory({ templateId, date, from: activeRoute === 'newMemory' ? 'home' : activeRoute })
-    setActiveRoute('newMemory')
+  // A day that has no mood yet starts with the mood step (the colour of how the child feels).
+  async function openNewMemory(templateId = null, date = toDayKey()) {
+    const asked = moodAsked.has(date) || Boolean(await getMoodOfDay(activeChildId, date))
+    setNewMemory({
+      templateId,
+      date,
+      from: activeRoute === 'newMemory' ? 'home' : activeRoute,
+      moodStep: !asked,
+      steps: false,
+      promptSet: pickPromptSet(getMemoryTemplate(templateId)),
+    })
+    goTo('newMemory')
   }
 
   function closeNewMemory() {
@@ -223,16 +290,18 @@ function App() {
     setNewMemory(null)
     // from the book, go back to the same page with the book open
     if (from === 'scrapbook') openEntry(date)
-    else setActiveRoute(from ?? 'home')
+    else goTo(from ?? 'home', 'back')
   }
 
   // A template's answers become a scrap on the day's page (and a milestone for the Milestone template),
   // and the book opens on it
   async function saveTemplateMemory(template, answers) {
     const date = newMemory.date
-    const { kind, text, files, milestoneTitle } = buildScrapFromAnswers(template, answers)
+    const { kind, tag, pictures, text, files, milestoneTitle } = template.promptSets
+      ? buildScrapFromPrompt(template, newMemory.promptSet, answers)
+      : buildScrapFromAnswers(template, answers)
 
-    const scrap = await addScrap({ childId: activeChildId, date, kind, text })
+    const scrap = await addScrap({ childId: activeChildId, date, kind, tag, pictures, text })
     for (const file of files) await attachFile(scrap.id, file)
     if (milestoneTitle) {
       markScrapAsMilestone(date, scrap, { title: milestoneTitle, color: '#FFD84D' })
@@ -385,25 +454,33 @@ function App() {
   }
 
   if (stage === 'welcome') {
-    return <WelcomeView model={presentWelcome()} onContinue={() => setStage('folders')} />
+    return (
+      <div className={`screen screen--${stageMotion}`} key="welcome">
+        <WelcomeView model={presentWelcome()} onContinue={() => goToStage('folders', 'forward')} />
+      </div>
+    )
   }
 
   if (stage === 'folders') {
     return (
-      <FolderPickerView
-        model={presentFolderPicker({ children })}
-        onSelectFolder={(id) => {
-          setActiveChildId(id)
-          setStage('app')
-        }}
-        onAddFolder={(name) =>
-          setChildren((current) => [
-            ...current,
-            { id: crypto.randomUUID(), name, birthday: null, milestones: [], scrapbook: createScrapbook() },
-          ])
-        }
-        onBack={() => setStage('welcome')}
-      />
+      <div className={`screen screen--${stageMotion}`} key="folders">
+        <FolderPickerView
+          model={presentFolderPicker({ children })}
+          onSelectFolder={(id) => {
+            setActiveChildId(id)
+            setActiveRoute('home')
+            setMotion('none')
+            goToStage('app', 'forward')
+          }}
+          onAddFolder={(name) =>
+            setChildren((current) => [
+              ...current,
+              { id: crypto.randomUUID(), name, birthday: null, photo: null, milestones: [], scrapbook: createScrapbook() },
+            ])
+          }
+          onBack={() => goToStage('welcome', 'back')}
+        />
+      </div>
     )
   }
 
@@ -424,6 +501,15 @@ function App() {
     page = renderScrapbook()
   } else if (activeRoute === 'calendar') {
     page = renderCalendar()
+  } else if (activeRoute === 'settings') {
+    page = (
+      <SettingsView
+        key={activeChildId}
+        model={presentSettings({ child: activeChild, theme })}
+        onSave={saveChildProfile}
+        onThemeChange={setTheme}
+      />
+    )
   } else if (activeRoute === 'summary') {
     page = (
       <SummaryView
@@ -432,7 +518,7 @@ function App() {
           summary: summaryData.summary,
           mediaUrls: summaryData.mediaUrls,
         })}
-        onBack={() => setActiveRoute('calendar')}
+        onBack={() => goTo('calendar', 'back')}
         onShuffle={() => setSummaryShuffle((count) => count + 1)}
       />
     )
@@ -440,8 +526,30 @@ function App() {
 
   if (activeRoute === 'newMemory') {
     const template = getMemoryTemplate(newMemory?.templateId)
-    if (template) {
-      return (
+    let screen
+    if (newMemory?.moodStep) {
+      screen = (
+        <MoodStepView
+          model={presentMoodStep({ child: activeChild })}
+          onClose={closeNewMemory}
+          onContinue={saveMoodStep}
+          onSkip={finishMoodStep}
+        />
+      )
+    } else if (template?.promptSets) {
+      screen = (
+        <PromptMemoryView
+          key={newMemory.promptSet.id}
+          model={presentPromptMemory({ template, set: newMemory.promptSet, showSteps: newMemory.steps })}
+          onBack={() => setNewMemory({ ...newMemory, templateId: null })}
+          onClose={closeNewMemory}
+          onSave={(answers) => saveTemplateMemory(template, answers)}
+          recorder={recorder}
+          set={newMemory.promptSet}
+        />
+      )
+    } else if (template) {
+      screen = (
         <TemplateFormView
           model={presentTemplateForm({ template, date: newMemory.date })}
           onBack={() => setNewMemory({ ...newMemory, templateId: null })}
@@ -450,65 +558,77 @@ function App() {
           template={template}
         />
       )
+    } else {
+      screen = (
+        <NewMemoryView
+          model={presentNewMemory({ date: newMemory?.date })}
+          onClose={closeNewMemory}
+          onPickTemplate={(templateId) =>
+            setNewMemory({ ...newMemory, templateId, promptSet: pickPromptSet(getMemoryTemplate(templateId)) })
+          }
+          onStartBlank={() => {
+            const date = newMemory.date
+            setNewMemory(null)
+            startEntry(date)
+          }}
+        />
+      )
     }
 
     return (
-      <NewMemoryView
-        model={presentNewMemory({ date: newMemory?.date })}
-        onClose={closeNewMemory}
-        onPickTemplate={(templateId) => setNewMemory({ ...newMemory, templateId })}
-        onStartBlank={() => {
-          const date = newMemory.date
-          setNewMemory(null)
-          startEntry(date)
-        }}
-      />
+      <div className="screen screen--forward" key="newMemory">
+        {screen}
+      </div>
     )
   }
 
   const quickModel = presentQuickMemory()
 
   return (
-    <>
-    <AppShell
-      activeRoute={activeRoute === 'summary' ? 'calendar' : activeRoute}
-      navigationItems={navigationItems}
-      navigationModel={presentSideNavigation({ child: activeChild })}
-      onNavigate={(route) => {
-        if (route === 'scrapbook') {
-          setTurn(null)
-          setScrapbookEditDate(null)
-          setScrapbookInitiallyOpen(false)
-          setEntryDate(toDayKey())
-          setHighlightScrapId(null)
-        }
-        setActiveRoute(route)
-      }}
-      onSwitchFolder={() => setStage('folders')}
-      quick={{
-        model: quickModel,
-        open: quickOpen,
-        onToggle: () => setQuickOpen((open) => !open),
-        onPick: (option) => {
-          setQuickOpen(false)
-          setQuickVariant(option.variant)
-        },
-      }}
-    >
-      {page}
-    </AppShell>
+    <div className={`screen screen--${stageMotion}`} key="app">
+      <AppShell
+        activeRoute={activeRoute === 'summary' ? 'calendar' : activeRoute}
+        motion={motion}
+        navigationItems={navigationItems}
+        navigationModel={presentSideNavigation({ child: activeChild })}
+        onNavigate={(route) => {
+          if (route === 'scrapbook') {
+            setTurn(null)
+            setScrapbookEditDate(null)
+            setScrapbookInitiallyOpen(false)
+            setEntryDate(toDayKey())
+            setHighlightScrapId(null)
+          }
+          goTo(route, 'tab')
+        }}
+        onSwitchFolder={() => goToStage('folders', 'back')}
+        pageKey={activeRoute}
+        quick={{
+          model: quickModel,
+          open: quickOpen,
+          onToggle: () => setQuickOpen((open) => !open),
+          onPick: (option) => {
+            setQuickOpen(false)
+            setQuickVariant(option.variant)
+          },
+        }}
+      >
+        {page}
+      </AppShell>
 
-    {quickVariant && (
-      <ScrapFormModal
-        kinds={quickModel.kinds}
-        mediaLabels={quickModel.mediaLabels}
-        onClose={() => setQuickVariant(null)}
-        onSave={saveQuickMemory}
-        recorder={recorder}
-        variant={quickVariant}
-      />
-    )}
-    </>
+      {/* Quick memory takes its media on the spot; choosing files is for the book's toolbar and the templates */}
+      {quickVariant && (
+        <ScrapFormModal
+          captureOnly
+          kinds={quickModel.kinds}
+          mediaLabels={quickModel.mediaLabels}
+          onClose={() => setQuickVariant(null)}
+          onSave={saveQuickMemory}
+          recorder={recorder}
+          variant={quickVariant}
+        />
+      )}
+    </div>
   )
 }
 

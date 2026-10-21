@@ -12,15 +12,15 @@ const sample = createSampleMilestones(LUCAS_ID)
 // A few recent days with a mood and some scraps, so the calendar has something to show.
 const RECENT_DAYS = [
   ['2026-10-01', 'happy', [['memory', 'Splashed in every puddle on the way home']]],
-  ['2026-10-02', 'silly', [['interaction', 'Made up a song about the cat']]],
+  ['2026-10-02', 'playful', [['interaction', 'Made up a song about the cat']]],
   ['2026-10-03', 'happy', [['activity', 'Painted with fingers']]],
   ['2026-10-04', 'calm', [
     ['memory', 'Said a new word: cabbage'],
     ['activity', 'Leaf treasure hunt in the park'],
     ['memory', 'Brushed my own teeth, all by myself!', 'Brushed my own teeth'],
   ]],
-  ['2026-10-09', 'silly', [['interaction', 'Splashed in the bath and sang to the rubber duck']]],
-  ['2026-10-12', 'sleepy', [['memory', 'Fell asleep in the car']]],
+  ['2026-10-09', 'playful', [['interaction', 'Splashed in the bath and sang to the rubber duck']]],
+  ['2026-10-12', 'dreamy', [['memory', 'Fell asleep in the car']]],
   ['2026-10-17', 'happy', [
     ['activity', 'Baked apple muffins together'],
     ['memory', 'Said "tack" to the baker without being asked'],

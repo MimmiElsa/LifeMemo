@@ -14,7 +14,8 @@ function describe(value, labels) {
 //   actions:  [{ id, label, icon, record }] extra buttons; `record` is a function that gives back a
 //             file (a photo) or, when it takes { onStart }, records until the stop callback is called
 //   recorder: the camera and microphone functions: { takePhoto, recordVideo, recordAudio }
-function MediaPicker({ accept, chooseLabel, labels, onChange, recorder, actions, value }) {
+//   captureOnly: leave out the file chooser, so the media can only be taken right now
+function MediaPicker({ accept, actions, captureOnly, chooseLabel, labels, onChange, recorder, value }) {
   const [recordingId, setRecordingId] = useState(null)
   const [error, setError] = useState('')
   const stopRef = useRef(null)
@@ -56,16 +57,18 @@ function MediaPicker({ accept, chooseLabel, labels, onChange, recorder, actions,
   return (
     <>
       <div className="answer-photo-choices">
-        <label className="answer-pill">
-          <NavIcon name={accept.startsWith('audio') ? 'mic' : 'camera'} size={16} />
-          {chooseLabel}
-          <input
-            accept={accept}
-            hidden
-            onChange={(event) => onChange(event.target.files[0] ?? null)}
-            type="file"
-          />
-        </label>
+        {!captureOnly && (
+          <label className="answer-pill">
+            <NavIcon name={accept.startsWith('audio') ? 'mic' : 'camera'} size={16} />
+            {chooseLabel}
+            <input
+              accept={accept}
+              hidden
+              onChange={(event) => onChange(event.target.files[0] ?? null)}
+              type="file"
+            />
+          </label>
+        )}
         {actions.map((action) => (
           <button
             className={`answer-pill${recordingId === action.id ? ' answer-pill--recording' : ''}`}
@@ -84,7 +87,7 @@ function MediaPicker({ accept, chooseLabel, labels, onChange, recorder, actions,
 }
 
 // A photo, a video, or either (mode: 'photo', 'video' or 'any'): choose a file, or use the camera
-export function PhotoPicker({ labels, mode = 'any', onChange, recorder, value }) {
+export function PhotoPicker({ captureOnly = false, labels, mode = 'any', onChange, recorder, value }) {
   const actions = []
   if (mode !== 'video') actions.push({ id: 'photo', label: labels.takePhoto, icon: 'camera', recorder: 'takePhoto' })
   if (mode !== 'photo') {
@@ -98,6 +101,7 @@ export function PhotoPicker({ labels, mode = 'any', onChange, recorder, value })
     <MediaPicker
       accept={accept}
       actions={actions}
+      captureOnly={captureOnly}
       chooseLabel={chooseLabel}
       labels={labels}
       onChange={onChange}
@@ -108,11 +112,12 @@ export function PhotoPicker({ labels, mode = 'any', onChange, recorder, value })
 }
 
 // An audio recording: choose a file, or record with the microphone
-export function AudioPicker({ labels, onChange, recorder, value }) {
+export function AudioPicker({ captureOnly = false, labels, onChange, recorder, value }) {
   return (
     <MediaPicker
       accept="audio/*"
       actions={[{ id: 'audio', label: labels.recordAudio, icon: 'mic', recorder: 'recordAudio', recording: true }]}
+      captureOnly={captureOnly}
       chooseLabel={labels.chooseAudio}
       labels={labels}
       onChange={onChange}

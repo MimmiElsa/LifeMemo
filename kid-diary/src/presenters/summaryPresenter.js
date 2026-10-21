@@ -4,10 +4,12 @@ const MONTHS = [
 ]
 const KIND_LABELS = { activity: 'Activity', interaction: 'Interaction', memory: 'Memory' }
 const MOOD_LABELS = {
+  cosy: 'Cosy and snuggly',
   happy: 'Happy and excited',
-  silly: 'Silly and giggly',
-  calm: 'Calm and cosy',
-  sleepy: 'Sleepy and snuggly',
+  zippy: 'Zippy and full of energy',
+  calm: 'Calm and relaxed',
+  dreamy: 'Dreamy and sleepy',
+  playful: 'Playful and giggly',
 }
 
 // "2026-10-04" -> "October 4"

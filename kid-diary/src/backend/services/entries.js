@@ -3,7 +3,7 @@
 // An "entry" is the scrapbook page of one day. Each thing a user adds to that
 // page is a "scrap" (activity, interaction or memory) with its own id.
 
-import { createEntry, createScrap, SCRAP_KINDS } from '../models.js'
+import { createEntry, createScrap, MOODS, SCRAP_KINDS } from '../models.js'
 import { get, getAll, put, remove } from '../store.js'
 import { toDayKey } from '../utils/dates.js'
 
@@ -17,6 +17,23 @@ export async function getOrCreateEntry(childId, date) {
   const entry = createEntry({ childId, date })
   await put('entries', entry)
   return entry
+}
+
+// How the child feels on a day: one of MOODS (the calendar tints the day with it).
+// The day's page is created if it doesn't exist yet.
+export async function setEntryMood(childId, date, mood) {
+  if (!MOODS.includes(mood)) throw new Error(`Unknown mood: ${mood}`)
+  const entry = await getOrCreateEntry(childId, date)
+  entry.mood = mood
+  entry.updatedAt = new Date().toISOString()
+  await put('entries', entry)
+  return entry
+}
+
+// How the child felt on a day (one of MOODS), or null when it is not set. Makes no page.
+export async function getMoodOfDay(childId, date) {
+  const [entry] = await getEntriesBetween(childId, date, date)
+  return entry?.mood ?? null
 }
 
 // Add a scrap to a day's page (the page is created if it doesn't exist yet).

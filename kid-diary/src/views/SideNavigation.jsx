@@ -73,7 +73,9 @@ export function SideNavigation({
       </ul>
 
       <button className="folder-switcher" onClick={onSwitchFolder} type="button">
-        <span className="folder-switcher-avatar" aria-hidden="true">{model.childInitial}</span>
+        <span className="folder-switcher-avatar" aria-hidden="true">
+          {model.childPhoto ? <img alt="" src={model.childPhoto} /> : model.childInitial}
+        </span>
         <span className="folder-switcher-text">
           <strong>{model.childName}</strong>
           <small>{model.switchFolderLabel}</small>

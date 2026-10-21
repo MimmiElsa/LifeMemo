@@ -38,9 +38,10 @@ function Modal({ children, onClose, title }) {
 //   scrap:    the scrap being changed (leave out to add a new one)
 //   variant:  when adding: 'text' (words), 'photo', 'video', 'audio' (a voice note) or 'media'
 //             (a photo or a video); anything but text can come with a few words
+//   captureOnly: a photo, video or voice note can only be taken now, not chosen from the device
 //   kinds:    [{ id, label }]
 //   recorder: the camera and microphone functions, for the buttons that record
-export function ScrapFormModal({ kinds, mediaLabels, onClose, onSave, recorder, scrap, variant = 'text' }) {
+export function ScrapFormModal({ captureOnly = false, kinds, mediaLabels, onClose, onSave, recorder, scrap, variant = 'text' }) {
   const isEdit = Boolean(scrap)
   const hasFile = !isEdit && variant !== 'text'
   const [kind, setKind] = useState(scrap?.kind ?? 'memory')
@@ -61,11 +62,12 @@ export function ScrapFormModal({ kinds, mediaLabels, onClose, onSave, recorder, 
     audio: 'Add a voice note',
     media: 'Add a photo or video',
   }
+  const captureTitles = { photo: 'Take a photo', video: 'Record a video', audio: 'Record a voice note' }
   const fieldNames = { photo: 'Photo', video: 'Video', audio: 'Voice note', media: 'Photo or video' }
   const pickerMode = { photo: 'photo', video: 'video', media: 'any' }[variant]
 
   return (
-    <Modal onClose={onClose} title={isEdit ? 'Edit scrap' : titles[variant]}>
+    <Modal onClose={onClose} title={isEdit ? 'Edit scrap' : (captureOnly && captureTitles[variant]) || titles[variant]}>
       <form className="modal-form" onSubmit={handleSubmit}>
         <div className="modal-chips" role="radiogroup">
           {kinds.map((item) => (
@@ -86,9 +88,9 @@ export function ScrapFormModal({ kinds, mediaLabels, onClose, onSave, recorder, 
           <div className="modal-field">
             <span>{fieldNames[variant]}</span>
             {variant === 'audio' ? (
-              <AudioPicker labels={mediaLabels} onChange={setFile} recorder={recorder} value={file} />
+              <AudioPicker captureOnly={captureOnly} labels={mediaLabels} onChange={setFile} recorder={recorder} value={file} />
             ) : (
-              <PhotoPicker labels={mediaLabels} mode={pickerMode} onChange={setFile} recorder={recorder} value={file} />
+              <PhotoPicker captureOnly={captureOnly} labels={mediaLabels} mode={pickerMode} onChange={setFile} recorder={recorder} value={file} />
             )}
           </div>
         )}

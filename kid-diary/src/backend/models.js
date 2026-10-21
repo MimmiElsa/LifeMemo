@@ -20,7 +20,7 @@ import { createId } from './utils/ids.js'
 export const SCRAP_KINDS = ['activity', 'interaction', 'memory']
 
 // How the child felt that day. The calendar tints the day with it (null = not set).
-export const MOODS = ['happy', 'silly', 'calm', 'sleepy']
+export const MOODS = ['cosy', 'happy', 'zippy', 'calm', 'dreamy', 'playful']
 
 // Entry - the scrapbook page for one day.
 //   date:     day key like "2026-10-15" (defaults to today)
@@ -45,10 +45,12 @@ export function createEntry({ childId, date = toDayKey(), mood = null }) {
 // Scrap - one item on an entry's page.
 //   entryId:  the page it sits on
 //   kind:     one of SCRAP_KINDS
+//   pictures: ids of the pictures that were tapped as answers (see demoIdeas.js)
+//   tag:      'challenge' when it answers the daily challenge, otherwise null
 //   mediaIds: ids of photos/videos/audio/drawings attached to it
 //   position: where it comes in the entry (0 = first). null until the entry's scraps
 //             have been given an order; scraps without one come first, oldest first.
-export function createScrap({ entryId, kind = 'memory', text = '', emojis = [], position = null }) {
+export function createScrap({ entryId, kind = 'memory', text = '', emojis = [], pictures = [], position = null, tag = null }) {
   if (!entryId) throw new Error('A scrap needs an entryId')
   if (!SCRAP_KINDS.includes(kind)) throw new Error(`Unknown scrap kind: ${kind}`)
 
@@ -59,6 +61,8 @@ export function createScrap({ entryId, kind = 'memory', text = '', emojis = [], 
     kind,
     text,
     emojis,
+    pictures,
+    tag,
     mediaIds: [],
     position,
     createdAt: now,

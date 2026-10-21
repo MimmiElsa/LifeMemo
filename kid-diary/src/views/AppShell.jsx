@@ -3,10 +3,12 @@ import { SideNavigation } from './SideNavigation.jsx'
 export function AppShell({
   activeRoute,
   children,
+  motion = 'tab',
   navigationItems,
   navigationModel,
   onNavigate,
   onSwitchFolder,
+  pageKey,
   quick,
 }) {
   return (
@@ -23,7 +25,8 @@ export function AppShell({
         quick={quick}
       />
 
-      <main className="app-content">{children}</main>
+      {/* a new key remounts the page, which replays its arrival animation */}
+      <main className={`app-content app-content--${motion}`} key={pageKey}>{children}</main>
     </div>
   )
 }
