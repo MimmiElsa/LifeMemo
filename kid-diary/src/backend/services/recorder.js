@@ -73,3 +73,34 @@ export async function recordVideo({ onStart } = {}) {
 		})
 	})
 }
+
+export async function recordAudio({ onStart } = {}) {
+	if (!navigator.mediaDevices?.getUserMedia) {
+		throw new Error('Camera and microphone access needs Safari on HTTPS')
+	}
+	if (!window.MediaRecorder) throw new Error('Audio recording is not supported in this browser')
+
+	const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+	const mimeType = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm']
+		.find((type) => MediaRecorder.isTypeSupported?.(type))
+	const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined)
+	const chunks = []
+
+	return await new Promise((resolve, reject) => {
+		recorder.ondataavailable = (event) => {
+			if (event.data.size) chunks.push(event.data)
+		}
+		recorder.onerror = () => {
+			stream.getTracks().forEach((track) => track.stop())
+			reject(new Error('Could not record the audio'))
+		}
+		recorder.onstop = () => {
+			stream.getTracks().forEach((track) => track.stop())
+			resolve(new Blob(chunks, { type: recorder.mimeType || 'audio/webm' }))
+		}
+		recorder.start()
+		onStart?.(() => {
+			if (recorder.state === 'recording') recorder.stop()
+		})
+	})
+}

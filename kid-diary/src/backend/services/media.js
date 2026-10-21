@@ -32,6 +32,12 @@ export async function saveVideo({ scrapId, file }) {
 	return video
 }
 
+export async function saveAudio({ scrapId, file }) {
+	const audio = createMedia({ scrapId, kind: 'audio', file })
+	await put('media', audio)
+	return audio
+}
+
 export async function loadPhoto(id) {
 	const photo = await get('media', id)
 	return photo?.kind === 'photo' ? photo : undefined
@@ -42,6 +48,11 @@ export async function loadVideo(id) {
 	return video?.kind === 'video' ? video : undefined
 }
 
+export async function loadAudio(id) {
+	const audio = await get('media', id)
+	return audio?.kind === 'audio' ? audio : undefined
+}
+
 export async function deletePhoto(id) {
 	const photo = await loadPhoto(id)
 	if (photo) await remove('media', id)
@@ -50,4 +61,9 @@ export async function deletePhoto(id) {
 export async function deleteVideo(id) {
 	const video = await loadVideo(id)
 	if (video) await remove('media', id)
+}
+
+export async function deleteAudio(id) {
+	const audio = await loadAudio(id)
+	if (audio) await remove('media', id)
 }

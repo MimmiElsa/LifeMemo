@@ -29,11 +29,9 @@ function Scrap({ scrap, onDelete }) {
 
   return (
     <article className="scrap">
-      {scrap.kind === 'photo' ? (
-        <img alt={scrap.name} src={scrap.url} />
-      ) : (
-        <video controls src={scrap.url} />
-      )}
+      {scrap.kind === 'photo' && <img alt={scrap.name} src={scrap.url} />}
+      {scrap.kind === 'video' && <video controls src={scrap.url} />}
+      {scrap.kind === 'audio' && <audio controls src={scrap.url} />}
       <div className="scrap-footer">
         <span className="scrap-name">{scrap.name}</span>
         <button className="scrap-delete" onClick={() => onDelete(scrap)} type="button">

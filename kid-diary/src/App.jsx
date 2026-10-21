@@ -2,10 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import {
   addScrap,
   attachMediaToScrap,
+  deleteAudio,
   deletePhoto,
   deleteVideo,
+  recordAudio,
   recordPhoto,
   recordVideo,
+  saveAudio,
   savePhoto,
   saveVideo,
 } from './backend/index.js'
@@ -62,12 +65,11 @@ function App() {
     if (!file || !activeChildId) return
     // each upload becomes a scrap on today's page for this child
     const scrap = await addScrap({ childId: activeChildId, date: toDayKey(), kind: 'memory' })
-    const media = kind === 'photo'
-      ? await savePhoto({ scrapId: scrap.id, file })
-      : await saveVideo({ scrapId: scrap.id, file })
+    const save = { photo: savePhoto, video: saveVideo, audio: saveAudio }[kind]
+    const media = await save({ scrapId: scrap.id, file })
     await attachMediaToScrap(scrap.id, media.id)
     setScraps((current) => [...current, { ...media, url: URL.createObjectURL(file) }])
-    setStatus(`${kind === 'photo' ? 'Photo' : 'Video'} added.`)
+    setStatus(`${kind[0].toUpperCase()}${kind.slice(1)} added.`)
   }
 
   async function runMediaAction(action) {
@@ -92,6 +94,13 @@ function App() {
             videoStopRef.current?.()
           } else {
             runMediaAction(() => addRecordedMedia('video'))
+          }
+        }}
+        onRecordAudio={() => {
+          if (recording) {
+            videoStopRef.current?.()
+          } else {
+            runMediaAction(() => addRecordedMedia('audio'))
           }
         }}
       />
@@ -186,6 +195,23 @@ function App() {
       return
     }
 
+    if (kind === 'audio') {
+      let file
+      try {
+        file = await recordAudio({
+          onStart: (stop) => {
+            videoStopRef.current = stop
+            setRecording(true)
+          },
+        })
+      } finally {
+        videoStopRef.current = null
+        setRecording(false)
+      }
+      await addMedia(file, kind)
+      return
+    }
+
     let file
     try {
       file = await recordVideo({
@@ -203,7 +229,8 @@ function App() {
 
   async function deleteScrap(scrap) {
     if (scrap.kind === 'photo') await deletePhoto(scrap.id)
-    else await deleteVideo(scrap.id)
+    else if (scrap.kind === 'video') await deleteVideo(scrap.id)
+    else await deleteAudio(scrap.id)
     URL.revokeObjectURL(scrap.url)
     setScraps((current) => current.filter((item) => item.id !== scrap.id))
   }
