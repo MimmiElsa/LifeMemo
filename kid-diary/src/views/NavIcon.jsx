@@ -7,6 +7,16 @@ const paths = {
       <path d="M4 10h16M9 3v4M15 3v4" />
     </>
   ),
+  blocks: (
+    <>
+      <rect x="4" y="13" width="7" height="7" rx="1.5" />
+      <rect x="13" y="13" width="7" height="7" rx="1.5" />
+      <rect x="8.5" y="4" width="7" height="7" rx="1.5" />
+    </>
+  ),
+  plus: <path d="M12 5v14M5 12h14" />,
+  'chevron-up': <path d="m6 15 6-6 6 6" />,
+  'chevron-down': <path d="m6 9 6 6 6-6" />,
   star: <path d="M12 4l2.5 5 5.5.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.5-.8z" />,
   settings: (
     <>

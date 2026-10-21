@@ -2,9 +2,12 @@ import { useState } from 'react'
 import { getNavigationItems, presentSideNavigation } from './presenters/appPresenter.js'
 import { presentStartPage } from './presenters/startPagePresenter.js'
 import { presentFolderPicker } from './presenters/folderPickerPresenter.js'
+import { presentMilestones } from './presenters/milestonesPresenter.js'
 import { presentWelcome } from './presenters/welcomePresenter.js'
+import { createSampleMilestones, LUCAS_BIRTHDAY } from './backend/sampleMilestones.js'
 import { AppShell } from './views/AppShell.jsx'
 import { FolderPickerView } from './views/FolderPickerView.jsx'
+import { MilestonesView } from './views/MilestonesView.jsx'
 import { PlaceholderPageView } from './views/PlaceholderPageView.jsx'
 import { StartPageView } from './views/StartPageView.jsx'
 import { WelcomeView } from './views/WelcomeView.jsx'
@@ -12,7 +15,14 @@ import { WelcomeView } from './views/WelcomeView.jsx'
 function App() {
   const navigationItems = getNavigationItems()
   const [stage, setStage] = useState('welcome')
-  const [children, setChildren] = useState([{ id: 'child-lucas', name: 'Lucas' }])
+  const [children, setChildren] = useState([
+    {
+      id: 'child-lucas',
+      name: 'Lucas',
+      birthday: LUCAS_BIRTHDAY,
+      milestones: createSampleMilestones('child-lucas').milestones,
+    },
+  ])
   const [activeChildId, setActiveChildId] = useState(null)
   const [activeRoute, setActiveRoute] = useState('home')
 
@@ -29,7 +39,7 @@ function App() {
           setStage('app')
         }}
         onAddFolder={(name) =>
-          setChildren((current) => [...current, { id: crypto.randomUUID(), name }])
+          setChildren((current) => [...current, { id: crypto.randomUUID(), name, birthday: null, milestones: [] }])
         }
         onBack={() => setStage('welcome')}
       />
@@ -39,9 +49,12 @@ function App() {
   const activeChild = children.find((c) => c.id === activeChildId)
   const activeItem = navigationItems.find((item) => item.id === activeRoute)
   const pageTitle = activeRoute === 'newMemory' ? 'New Memory' : activeItem?.label ?? 'Page'
-  const page = activeRoute === 'home'
-    ? <StartPageView model={presentStartPage({ child: activeChild })} />
-    : <PlaceholderPageView title={pageTitle} />
+  let page = <PlaceholderPageView title={pageTitle} />
+  if (activeRoute === 'home') {
+    page = <StartPageView model={presentStartPage({ child: activeChild })} />
+  } else if (activeRoute === 'milestones') {
+    page = <MilestonesView model={presentMilestones({ child: activeChild })} />
+  }
 
   return (
     <AppShell
