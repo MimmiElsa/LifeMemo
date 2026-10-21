@@ -19,17 +19,23 @@ import { createId } from './utils/ids.js'
 // The kinds of scrap a page can hold.
 export const SCRAP_KINDS = ['activity', 'interaction', 'memory']
 
+// How the child felt that day. The calendar tints the day with it (null = not set).
+export const MOODS = ['happy', 'silly', 'calm', 'sleepy']
+
 // Entry - the scrapbook page for one day.
 //   date:     day key like "2026-10-15" (defaults to today)
+//   mood:     one of MOODS, or null
 //   stickers: stickers placed on the page (filled in by issue #7)
-export function createEntry({ childId, date = toDayKey() }) {
+export function createEntry({ childId, date = toDayKey(), mood = null }) {
   if (!childId) throw new Error('An entry needs a childId')
+  if (mood !== null && !MOODS.includes(mood)) throw new Error(`Unknown mood: ${mood}`)
 
   const now = new Date().toISOString()
   return {
     id: createId(),
     childId,
     date,
+    mood,
     stickers: [],
     createdAt: now,
     updatedAt: now,
