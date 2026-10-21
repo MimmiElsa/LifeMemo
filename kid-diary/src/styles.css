@@ -2158,3 +2158,287 @@ button {
     transition-duration: 0.01s;
   }
 }
+
+/* ====== Monthly summary page ====== */
+/* Two facing pages of soft, colourful cards: milestones first, then the month's picks */
+.app-content:has(.summary-page) {
+  padding: 22px 28px;
+  background: #f7f2ea;
+  overflow-y: auto;
+}
+
+.summary-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 100%;
+  font-family: Inter, system-ui, sans-serif;
+  color: #141a26;
+}
+
+.summary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.summary-banner {
+  text-align: center;
+}
+
+.summary-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #8a7f6a;
+}
+
+.summary-banner h1 {
+  margin: 0;
+  font-family: Fredoka, sans-serif;
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.summary-banner p {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: #5b6577;
+}
+
+.summary-board {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  padding: 40px 40px 20px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border-radius: 26px;
+  background: #fff4ec;
+  box-shadow: 0 10px 24px rgba(60, 40, 10, 0.12);
+  scrollbar-width: none;
+  /* the cards flow down the first column, then the second, so the milestones stay at the top */
+  column-count: 2;
+  column-gap: 34px;
+}
+
+.summary-board::-webkit-scrollbar {
+  display: none;
+}
+
+/* --- Cards --- */
+.sum-card {
+  position: relative;
+  flex-shrink: 0;
+  padding: 18px 24px 20px;
+  border-radius: 24px;
+  transform: rotate(var(--tilt, 0deg));
+}
+
+/* every other card sits a little further in, like a hand-placed page */
+.summary-board > .sum-card {
+  break-inside: avoid;
+  margin-bottom: 30px;
+}
+
+.summary-board > .sum-card:nth-child(even) {
+  margin-left: 12%;
+}
+
+.summary-board > .sum-card:nth-child(odd) {
+  margin-right: 8%;
+}
+
+.sum-card-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6f6358;
+}
+
+.sum-card-date {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #3b332c;
+}
+
+.sum-card h3 {
+  margin: 2px 0 0;
+  font-family: Fredoka, sans-serif;
+  font-size: 25px;
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.sum-card p {
+  margin: 0;
+}
+
+.sum-card-sticker {
+  position: absolute;
+  top: -22px;
+  right: 12px;
+  width: 64px;
+  pointer-events: none;
+  transform: rotate(8deg);
+}
+
+/* a milestone, like "learned a new word" */
+.sum-card--milestone {
+  padding-bottom: 18px;
+  background: color-mix(in srgb, var(--milestone-color, #8fdda9) 38%, #f4ffee);
+}
+
+.sum-card--milestone h3 {
+  margin-top: 4px;
+  font-size: 26px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.sum-card--milestone p {
+  margin-top: 6px;
+  font-family: Caveat, cursive;
+  font-size: 21px;
+  line-height: 1.1;
+  color: #2e2a26;
+}
+
+/* how the month felt */
+.sum-card--mood { background: #fff1c4; }
+.sum-card--mood-silly { background: #ffe0f2; }
+.sum-card--mood-calm { background: #e3f0ff; }
+.sum-card--mood-sleepy { background: #ece6ff; }
+
+.sum-card--mood .sum-card-sticker {
+  width: 54px;
+  top: -18px;
+}
+
+/* a photo or video, as a polaroid */
+.sum-card--photo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 9px 12px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.16);
+}
+
+.sum-card--photo img,
+.sum-card--photo video {
+  display: block;
+  width: 100%;
+  max-height: 190px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.sum-card--photo strong {
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+.sum-card--photo span {
+  font-family: Caveat, cursive;
+  font-size: 18px;
+  line-height: 1.05;
+  color: #5b6577;
+}
+
+/* a written memory, in a dotted frame */
+.sum-card--note {
+  border: 1.5px dashed #3b332c;
+  background: #fffaf5;
+}
+
+.sum-card--note p {
+  margin-top: 4px;
+  font-family: Caveat, cursive;
+  font-size: 25px;
+  line-height: 1.12;
+  color: #2e2a26;
+}
+
+/* an activity or an interaction */
+.sum-card--label h3 {
+  font-size: 22px;
+}
+
+.sum-card--activity { background: #ffe3d6; }
+.sum-card--interaction { background: #ece4ff; }
+
+.sum-card--stats {
+  background: #fff;
+}
+
+.sum-card--stats ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sum-card--stats li {
+  padding: 5px 11px;
+  border-radius: 12px;
+  background: #fff4ec;
+  font-size: 12px;
+  font-weight: 500;
+  color: #3a4356;
+}
+
+.sum-card--hint {
+  border: 1.5px dashed #cdbfae;
+  background: transparent;
+}
+
+.sum-card--hint p {
+  font-family: Caveat, cursive;
+  font-size: 22px;
+  color: #8a7f6a;
+}
+
+.summary-corner-sticker {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 92px;
+  pointer-events: none;
+}
+
+.summary-blank {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 26px;
+  background: #fff4ec;
+  text-align: center;
+}
+
+.summary-blank img {
+  width: 130px;
+  margin-bottom: 14px;
+}
+
+.summary-blank h2 {
+  margin: 0 0 6px;
+  font-family: Fredoka, sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.summary-blank p {
+  margin: 0;
+  font-size: 14px;
+  color: #5b6577;
+}
