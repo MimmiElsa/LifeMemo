@@ -25,6 +25,7 @@ import { presentMilestones } from './presenters/milestonesPresenter.js'
 import { presentNewMemory } from './presenters/newMemoryPresenter.js'
 import { presentEntry } from './presenters/entryPresenter.js'
 import { presentScrapbook } from './presenters/scrapbookPresenter.js'
+import { presentSettings } from './presenters/settingsPresenter.js'
 import { presentSummary } from './presenters/summaryPresenter.js'
 import { presentWelcome } from './presenters/welcomePresenter.js'
 import { createScrapbook } from './backend/models.js'
@@ -35,6 +36,7 @@ import { MilestonesView } from './views/MilestonesView.jsx'
 import { NewMemoryView } from './views/NewMemoryView.jsx'
 import { PlaceholderPageView } from './views/PlaceholderPageView.jsx'
 import { ScrapbookView } from './views/ScrapbookView.jsx'
+import { SettingsView } from './views/SettingsView.jsx'
 import { StartPageView } from './views/StartPageView.jsx'
 import { SummaryView } from './views/SummaryView.jsx'
 import { WelcomeView } from './views/WelcomeView.jsx'
@@ -45,6 +47,11 @@ function App() {
   const [children, setChildren] = useState([LUCAS_DEMO])
   const [activeChildId, setActiveChildId] = useState(null)
   const [activeRoute, setActiveRoute] = useState('home')
+  const [theme, setTheme] = useState('light')
+  // how the next screen arrives: 'tab' fades up, 'forward' slides in from the right,
+  // 'back' slides in from the left, 'none' is for a screen that arrives with its stage
+  const [motion, setMotion] = useState('tab')
+  const [stageMotion, setStageMotion] = useState('none')
   const [scraps, setScraps] = useState([])
   const [scrapbookInitiallyOpen, setScrapbookInitiallyOpen] = useState(false)
   // which day's entry the scrapbook shows, and the scrap to point out on it
@@ -77,6 +84,27 @@ function App() {
   useEffect(() => {
     seedDemoData()
   }, [])
+
+  // the stylesheet restyles everything from this attribute
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+  }, [theme])
+
+  function goTo(route, kind = 'forward') {
+    setMotion(kind)
+    setActiveRoute(route)
+  }
+
+  function goToStage(next, kind) {
+    setStageMotion(kind)
+    setStage(next)
+  }
+
+  function saveChildProfile(fields) {
+    setChildren((current) =>
+      current.map((child) => (child.id === activeChildId ? { ...child, ...fields } : child)),
+    )
+  }
 
   async function addMedia(file, kind) {
     if (!file || !activeChildId) return
@@ -143,7 +171,7 @@ function App() {
         onOpenSummary={() => {
           setSummaryMonth({ year: calendar.year, month: calendar.month })
           setSummaryShuffle((count) => count + 1)
-          setActiveRoute('summary')
+          goTo('summary')
         }}
         onPreviousMonth={calendar.showPreviousMonth}
         onSelectDate={calendar.selectDate}
@@ -158,7 +186,7 @@ function App() {
     setEntryDate(date)
     setHighlightScrapId(scrapId)
     setScrapbookInitiallyOpen(true)
-    setActiveRoute('scrapbook')
+    goTo('scrapbook')
   }
 
   // The scrapbook opens on its cover. Opening the book shows the day's entry as facing pages,
@@ -201,7 +229,7 @@ function App() {
         entryModel={buildEntryModel(entryDate, entryDay, entryDay.loaded)}
         initiallyOpen={scrapbookInitiallyOpen}
         model={presentScrapbook({ child: activeChild })}
-        onAddMemory={() => setActiveRoute('newMemory')}
+        onAddMemory={() => goTo('newMemory')}
         onDeleteScrap={deleteScrap}
         onTurnComplete={completeTurn}
         onTurnPage={turnPage}
@@ -257,25 +285,33 @@ function App() {
   }
 
   if (stage === 'welcome') {
-    return <WelcomeView model={presentWelcome()} onContinue={() => setStage('folders')} />
+    return (
+      <div className={`screen screen--${stageMotion}`} key="welcome">
+        <WelcomeView model={presentWelcome()} onContinue={() => goToStage('folders', 'forward')} />
+      </div>
+    )
   }
 
   if (stage === 'folders') {
     return (
-      <FolderPickerView
-        model={presentFolderPicker({ children })}
-        onSelectFolder={(id) => {
-          setActiveChildId(id)
-          setStage('app')
-        }}
-        onAddFolder={(name) =>
-          setChildren((current) => [
-            ...current,
-            { id: crypto.randomUUID(), name, birthday: null, milestones: [], scrapbook: createScrapbook() },
-          ])
-        }
-        onBack={() => setStage('welcome')}
-      />
+      <div className={`screen screen--${stageMotion}`} key="folders">
+        <FolderPickerView
+          model={presentFolderPicker({ children })}
+          onSelectFolder={(id) => {
+            setActiveChildId(id)
+            setActiveRoute('home')
+            setMotion('none')
+            goToStage('app', 'forward')
+          }}
+          onAddFolder={(name) =>
+            setChildren((current) => [
+              ...current,
+              { id: crypto.randomUUID(), name, birthday: null, photo: null, milestones: [], scrapbook: createScrapbook() },
+            ])
+          }
+          onBack={() => goToStage('welcome', 'back')}
+        />
+      </div>
     )
   }
 
@@ -298,6 +334,15 @@ function App() {
     page = renderScrapbook()
   } else if (activeRoute === 'calendar') {
     page = renderCalendar()
+  } else if (activeRoute === 'settings') {
+    page = (
+      <SettingsView
+        key={activeChildId}
+        model={presentSettings({ child: activeChild, theme })}
+        onSave={saveChildProfile}
+        onThemeChange={setTheme}
+      />
+    )
   } else if (activeRoute === 'summary') {
     page = (
       <SummaryView
@@ -306,31 +351,35 @@ function App() {
           summary: summaryData.summary,
           mediaUrls: summaryData.mediaUrls,
         })}
-        onBack={() => setActiveRoute('calendar')}
+        onBack={() => goTo('calendar', 'back')}
         onShuffle={() => setSummaryShuffle((count) => count + 1)}
       />
     )
   }
 
   return (
-    <AppShell
-      activeRoute={activeRoute === 'summary' ? 'calendar' : activeRoute}
-      navigationItems={navigationItems}
-      navigationModel={presentSideNavigation({ child: activeChild })}
-      onNavigate={(route) => {
-        if (route === 'scrapbook') {
-          setTurn(null)
-          setScrapbookInitiallyOpen(false)
-          setEntryDate(toDayKey())
-          setHighlightScrapId(null)
-        }
-        setActiveRoute(route)
-      }}
-      onNewMemory={() => setActiveRoute('newMemory')}
-      onSwitchFolder={() => setStage('folders')}
-    >
-      {page}
-    </AppShell>
+    <div className={`screen screen--${stageMotion}`} key="app">
+      <AppShell
+        activeRoute={activeRoute === 'summary' ? 'calendar' : activeRoute}
+        motion={motion}
+        navigationItems={navigationItems}
+        navigationModel={presentSideNavigation({ child: activeChild })}
+        onNavigate={(route) => {
+          if (route === 'scrapbook') {
+            setTurn(null)
+            setScrapbookInitiallyOpen(false)
+            setEntryDate(toDayKey())
+            setHighlightScrapId(null)
+          }
+          goTo(route, 'tab')
+        }}
+        onNewMemory={() => goTo('newMemory')}
+        onSwitchFolder={() => goToStage('folders', 'back')}
+        pageKey={activeRoute}
+      >
+        {page}
+      </AppShell>
+    </div>
   )
 }
 

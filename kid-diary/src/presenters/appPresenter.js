@@ -15,6 +15,7 @@ export function presentSideNavigation({ child = null } = {}) {
     appName: 'LifeMemo',
     newMemoryLabel: 'New Memory',
     childName: child?.name ?? 'No folder',
+    childPhoto: child?.photo ?? null,
     childInitial: (child?.name ?? '?').charAt(0).toUpperCase(),
     switchFolderLabel: 'Switch Folder',
   }

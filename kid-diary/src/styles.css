@@ -26,7 +26,8 @@ body {
   width: 1194px;
   height: 834px;
   transform: scale(var(--frame-scale, 1));
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   background: #fff;
   border: 14px solid #1c1c1e;
   border-radius: 36px;
@@ -138,9 +139,17 @@ button {
   justify-content: center;
   width: 34px;
   height: 34px;
+  flex-shrink: 0;
+  overflow: hidden;
   border-radius: 50%;
   background: #e3a6f2;
   font-weight: 600;
+}
+
+.folder-switcher-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .folder-switcher-text {
@@ -161,7 +170,6 @@ button {
 
 .welcome-image {
   flex: 1;
-  margin: 12px 0 12px 12px;
   background: #d9d9d9;
 }
 
@@ -252,7 +260,7 @@ button {
 /* Existing folder: gradient stand-in until the folder artwork is added */
 .folder-tile--existing {
   border: none;
-  background: linear-gradient(160deg, #e3a6f2 0%, #e9a9a9 100%);
+  background: linear-gradient(160deg, #e3a6f2 0%, #e9a9a9 100%) center / cover;
 }
 
 /* Add Folder */
@@ -2496,4 +2504,254 @@ button {
   margin: 0;
   font-size: 14px;
   color: #5b6577;
+}
+
+/* ====== Back button (folder picker) ====== */
+.folder-picker-screen {
+  position: relative;
+  min-height: 100%;
+  padding: 24px;
+}
+
+.back-button {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 18px 8px 10px;
+  border: 1px solid #dcdcdc;
+  border-radius: 999px;
+  background: #fff;
+  color: #25282b;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background-color 0.15s, transform 0.15s;
+}
+
+.back-button:hover {
+  background: #f1f4f8;
+}
+
+.back-button:active {
+  transform: scale(0.96);
+}
+
+/* ====== Settings ====== */
+.settings-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 640px;
+}
+
+.settings-header h1 {
+  margin: 0 0 4px;
+  font-size: 30px;
+}
+
+.settings-header p {
+  margin: 0;
+  color: #808080;
+}
+
+.settings-card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 24px;
+  border-radius: 28px;
+  background: #f4f6fa;
+}
+
+.settings-card h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.settings-photo-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.settings-photo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 96px;
+  height: 100px;
+  overflow: hidden;
+  border-radius: 24px;
+  background: linear-gradient(160deg, #e3a6f2 0%, #e9a9a9 100%);
+  font-size: 36px;
+  font-weight: 600;
+}
+
+.settings-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.settings-photo-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.settings-photo-text small {
+  color: #808080;
+}
+
+.settings-photo-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.settings-chip {
+  padding: 7px 16px;
+  border: 1px solid #cfd5de;
+  border-radius: 999px;
+  background: #fff;
+  color: #25282b;
+  cursor: pointer;
+}
+
+.settings-chip:hover:not(:disabled) {
+  background: #eef2f8;
+}
+
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.settings-field > span {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.settings-field input[type='text'],
+.settings-field input[type='date'] {
+  width: 100%;
+  max-width: 360px;
+  padding: 10px 14px;
+  border: 1px solid #cfd5de;
+  border-radius: 14px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+}
+
+.settings-field input:focus-visible {
+  outline: 2px solid #6ea8f7;
+  outline-offset: 1px;
+}
+
+.settings-save-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.button-primary:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.settings-saved {
+  color: #2f8f5b;
+  font-weight: 600;
+}
+
+.theme-toggle {
+  display: inline-flex;
+  padding: 4px;
+  border-radius: 999px;
+  background: #e3e8f0;
+}
+
+.theme-option {
+  padding: 8px 28px;
+  border: none;
+  border-radius: 999px;
+  background: none;
+  color: #25282b;
+  cursor: pointer;
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.theme-option--active {
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+  font-weight: 600;
+}
+
+/* ====== Screen transitions ====== */
+/* A screen plays its arrival animation when it mounts: tabs fade up, moving deeper slides in
+   from the right and going back slides in from the left, like a phone app. */
+.screen {
+  height: 100%;
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(56px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-56px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+
+.screen--forward,
+.app-content--forward {
+  animation: slide-in-right 0.36s cubic-bezier(0.22, 0.8, 0.3, 1) backwards;
+}
+
+.screen--back,
+.app-content--back {
+  animation: slide-in-left 0.36s cubic-bezier(0.22, 0.8, 0.3, 1) backwards;
+}
+
+.app-content--tab {
+  animation: fade-up 0.3s cubic-bezier(0.22, 0.8, 0.3, 1) backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen--forward,
+  .screen--back,
+  .app-content--forward,
+  .app-content--back,
+  .app-content--tab {
+    animation: none;
+  }
+}
+
+/* ====== Dark mode ====== */
+/* The whole screen is inverted (and hue-turned back so colours stay close to their light
+   versions); photos, video and the folder picture are inverted again to look normal. */
+[data-theme='dark'] #root .screen {
+  filter: invert(1) hue-rotate(180deg) contrast(0.9);
+}
+
+[data-theme='dark'] #root .screen :is(img, video, canvas),
+[data-theme='dark'] #root .screen .folder-tile--existing[style] {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+.folder-picker-screen .logo-header {
+  display: flex;
+  justify-content: center;
 }

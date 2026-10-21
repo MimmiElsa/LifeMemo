@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import logo from '../logo.js'
+import { NavIcon } from './NavIcon.jsx'
 
 export function FolderPickerView({ model, onSelectFolder, onAddFolder, onBack }) {
   const [isAdding, setIsAdding] = useState(false)
@@ -15,8 +16,11 @@ export function FolderPickerView({ model, onSelectFolder, onAddFolder, onBack })
   }
 
   return (
-    <main>
-      <button onClick={onBack} type="button">{model.backLabel}</button>
+    <main className="folder-picker-screen">
+      <button className="back-button" onClick={onBack} type="button">
+        <NavIcon name="chevron-left" size={18} />
+        {model.backLabel}
+      </button>
       <div className="logo-header">
         <img className="welcome-logo" src={logo} alt={model.appName} />
       </div>
@@ -31,6 +35,7 @@ export function FolderPickerView({ model, onSelectFolder, onAddFolder, onBack })
             <button
               className="folder-tile folder-tile--existing"
               onClick={() => onSelectFolder(folder.id)}
+              style={folder.photo ? { backgroundImage: `url(${folder.photo})` } : undefined}
               type="button"
               aria-label={`Open ${folder.name}'s folder`}
             />
