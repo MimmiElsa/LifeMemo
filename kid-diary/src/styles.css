@@ -4222,3 +4222,15 @@ button {
 .use-illustrations {
   cursor: pointer;
 }
+
+/* ====== Opened from the home screen: the app fills the screen ====== */
+html[data-standalone] body {
+  padding: env(safe-area-inset-top) 0 0;
+  background: #fff;
+}
+
+html[data-standalone] #root {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
