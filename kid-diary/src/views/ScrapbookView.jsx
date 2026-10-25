@@ -83,6 +83,10 @@ function IdeaModal({ idea, labels, onAnother, onClose }) {
 // The tools for editing an entry, in a bar that floats just under the book. They sit outside
 // the pages, so opening the bar never moves anything on them. The bar belongs to the one entry
 // that is being edited (the other page of the book is not touched).
+// A swipe: at least this far sideways, and quick
+const SWIPE_MIN_PX = 60
+const SWIPE_MAX_MS = 900
+
 const TOOLS = [
   { id: 'text', icon: 'text', variant: 'text' },
   { id: 'stickers', icon: 'smile' },
@@ -200,6 +204,8 @@ export function ScrapbookView({
   const [phase, setPhase] = useState(initiallyOpen ? 'open' : 'closed')
   const isOpen = phase !== 'closed'
   const flipperRef = useRef(null)
+  const swipeStart = useRef(null)
+  const swipeHappened = useRef(false)
 
   // Which scrap is tapped, and which entry is being edited. Each page of the book is its own
   // entry, so only the entry whose edit button was pressed goes into edit mode.
@@ -274,6 +280,37 @@ export function ScrapbookView({
     if (phase === 'open' && !turn) onTurnPage(leftDate)
   }
 
+  // Swiping the open book turns the page like the corners do: a quick, mostly sideways drag.
+  // Left turns to the next pages, right to the previous. Buttons, stickers and players are left alone.
+  function handleSwipeStart(event) {
+    swipeStart.current = null
+    if (phase !== 'open' || turn) return
+    if (event.target.closest('button, input, textarea, select, audio, video, a, .page-sticker')) return
+    swipeStart.current = { x: event.clientX, y: event.clientY, time: event.timeStamp }
+  }
+
+  function handleSwipeEnd(event) {
+    const start = swipeStart.current
+    swipeStart.current = null
+    if (!start) return
+    const dx = event.clientX - start.x
+    const dy = event.clientY - start.y
+    const quick = event.timeStamp - start.time < SWIPE_MAX_MS
+    if (!quick || Math.abs(dx) < SWIPE_MIN_PX || Math.abs(dx) < Math.abs(dy) * 1.5) return
+
+    // the lift of the finger would also count as a tap on the scrap under it: ignore that tap
+    swipeHappened.current = true
+    setTimeout(() => (swipeHappened.current = false), 50)
+    const target = dx < 0 ? pages.turn.next : pages.turn.previous
+    if (target.date) handleTurnPage(target.date)
+  }
+
+  function ignoreTapAfterSwipe(event) {
+    if (!swipeHappened.current) return
+    event.stopPropagation()
+    event.preventDefault()
+  }
+
   // While turning forward the new right page waits under the leaf (backward: the new left page)
   const leftModel = turn?.direction === 'previous' ? turn.left : pages.left
   const rightModel = turn?.direction === 'next' ? turn.right : pages.right
@@ -329,7 +366,14 @@ export function ScrapbookView({
           .join(' ')}
       >
         {/* ===== The book ===== */}
-        <div className="book" style={{ '--cover': cover.color }}>
+        <div
+          className="book"
+          onClickCapture={ignoreTapAfterSwipe}
+          onPointerCancel={() => (swipeStart.current = null)}
+          onPointerDown={handleSwipeStart}
+          onPointerUp={handleSwipeEnd}
+          style={{ '--cover': cover.color }}
+        >
           {/* right-hand page, under the cover */}
           <div className="book-pages-edge" />
           <div className="book-pages" />
