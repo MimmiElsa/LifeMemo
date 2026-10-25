@@ -4234,3 +4234,9 @@ html[data-standalone] #root {
   border-radius: 0;
   box-shadow: none;
 }
+
+/* Swiping the open book turns the page: sideways drags reach the page, up and down still scroll */
+.scrapbook-body.is-open .book {
+  touch-action: pan-y;
+  user-select: none;
+}
